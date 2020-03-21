@@ -12,4 +12,8 @@ python3 scripts/demo_inference.py --indir ../text-based-person-search/data/ --ou
 TODO:
 
 
-Finish pose_estimator.py in utils
+
+1. Dataset.py
+
+
+2. Train.py --> Resnet50 + Bi-LSTM
