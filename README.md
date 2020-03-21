@@ -11,5 +11,5 @@ python3 scripts/demo_inference.py --indir ../text-based-person-search/data/ --ou
 
 TODO:
 
-Finish pose_estimator.py
+Finish pose_estimator.py in utils
 dataset.py
