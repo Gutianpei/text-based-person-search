@@ -9,11 +9,11 @@ python3 scripts/demo_inference.py --indir ../text-based-person-search/data/ --ou
 
 
 
-TODO:
+# TODO:
 
 
 
 1. Dataset.py
 
 
-2. Train.py --> Resnet50 + Bi-LSTM
+2. Train.py --> Resnet50 (done, need testing) + Bi-LSTM
