@@ -4,14 +4,35 @@ import torch
 import random
 import json
 import numpy as np
+from torch.utils import data
+import cv2
 
-class dataset():
-    def __init__(self, dataset_dir):
+class dataset(data.Dataset):
+    def __init__(self, dataset_dir, new_height, new_width):
         self.dataset_dir = dataset_dir
+        self.new_height = new_height
+		self.new_width = new_width
 
-    def get_dict(self,index):
-        js_data = json.load(self.dataset_dir)   #load json to dict
-        return js_data
+    def __getitem__(self,index):
+        js_data = json.load(self.dataset_dir + "/captions_all.json")
 
-    def get_img_list(self):
-        
+        images = []
+        captions = []
+        for item in js_data:
+            #Read image
+            image = cv2.imread("/imgs" + item["file_path"])
+            image = cv2.resize(image, (self.new_width, self.new_height))
+            image = image[:,:,::-1]
+            images.append(image.numpy())
+
+            #Read captions
+            #TODO!
+
+
+        images = np.array(images, np.float32)
+        images = torch.from_numpy(images).float()
+
+        return images, captions
+
+    def __len__(self):
+        return len(captions)
