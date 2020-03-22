@@ -4,18 +4,17 @@ import torch
 import random
 import json
 import numpy as np
-from torch.utils import data
 import cv2
 
-class dataset(data.Dataset):
+class dataset():
     def __init__(self, dataset_dir, new_height, new_width):
         self.dataset_dir = dataset_dir
         self.new_height = new_height
 		self.new_width = new_width
 
-    def __getitem__(self,index):
+    def get_img_caption(self):
         js_data = json.load(self.dataset_dir + "/captions_all.json")
-
+        # Check captions.json for format
         images = []
         captions = []
         for item in js_data:
@@ -33,6 +32,3 @@ class dataset(data.Dataset):
         images = torch.from_numpy(images).float()
 
         return images, captions
-
-    def __len__(self):
-        return len(captions)
