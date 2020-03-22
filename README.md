@@ -13,7 +13,7 @@ python3 scripts/demo_inference.py --indir ../text-based-person-search/data/ --ou
 
 
 
-1. Dataset.py
+1. Dataset.py (structure built)
 
 
 2. Train.py --> Resnet50 (done, need testing) + Bi-LSTM
