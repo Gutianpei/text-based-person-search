@@ -19,3 +19,6 @@ def main():
 	score = loaded_model.evaluate(X, Y, verbose=0)
 	print("%s: %.2f%%" % (loaded_model.metrics_names[1], score[1]*100))
 	
+if __name__ == "__main__":
+	main()
+	
