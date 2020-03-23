@@ -2,6 +2,7 @@
 import torchvision
 from gensim.models import Word2Vec
 import numpy as np
+from keras.preprocessing import sequence
 import dataset
 
 # load images and captions
@@ -19,4 +20,5 @@ word_model = Word2Vec(captions, size=300, min_count=1)
 word_model.wv.save_word2vec_format('word_model.bin')
 
 # convert
-caption_embeddings = np.array([word_model[i] for i in captions])
+captions_embeddings = np.array([word_model[i] for i in captions])
+captions_embeddings = sequence.pad_sequences(captions_embeddings, dtype='float32', padding='post')
