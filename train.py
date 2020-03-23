@@ -41,7 +41,7 @@ def main():
 	ratio = 0.6	 #train/test split ratio
 	max_features = 20000
 	maxlen = 100
-
+	activition = "relu"
 	############################
 	#setup gpu
 	if use_cuda = True:
@@ -77,7 +77,7 @@ def main():
 	model.add(Embedding(max_features, 128, input_length=maxlen))
 	model.add(Bidirectional(LSTM(64)))
 	model.add(Dropout(0.5))
-	model.add(Dense(1, activation='sigmoid'))
+	model.add(Dense(1, activation=activition))
 	
 	model.compile("adam",loss=cos_distance_loss,metrics=['accuracy']) #or loss=euclidean_distance_loss 
 
