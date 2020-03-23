@@ -17,5 +17,6 @@ print(resnet_output.shape)
 # word embedding training (could change to pre-trained one)
 word_model = Word2Vec(captions, size=300, min_count=1)
 word_model.wv.save_word2vec_format('word_model.bin')
-# convert (not finished, depends on the shape of captions)
+
+# convert
 caption_embeddings = np.array([word_model[i] for i in captions])
