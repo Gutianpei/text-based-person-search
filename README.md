@@ -11,9 +11,25 @@ python3 scripts/demo_inference.py --indir ../text-based-person-search/data/ --ou
 
 # TODO:
 
+## 1. Loading Data:
+
+- [x] Load raw image with shape (n,img_height, img_width, 3)
+
+- [ ] Load raw captions with shape (n, ???)
+
+- [ ] Run Alphapose get all keypoints and crop body parts
 
 
-1. Dataset.py (structure built)
+## 2. Preprocessing:
+
+- [ ] Standardization
+- [ ] ?
 
 
-2. Train.py --> Resnet50 (done, need testing) + Bi-LSTM
+## 3. Network:
+
+- [ ] Build resnet50 and get output feature vector
+
+- [ ] Bi-LSTM, X is captions matrix and y is resnet output
+
+
