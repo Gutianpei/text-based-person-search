@@ -28,7 +28,7 @@ python3 scripts/demo_inference.py --indir ../text-based-person-search/data/ --ou
 
 ## 3. Network:
 
-- [ ] Build resnet50 and get output feature vector
+- [x] Build resnet50 and get output feature vector
 
 - [ ] Bi-LSTM, X is captions matrix and y is resnet output
 
