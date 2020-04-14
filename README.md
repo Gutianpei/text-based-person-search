@@ -23,7 +23,7 @@ python3 scripts/demo_inference.py --indir ../text-based-person-search/data/ --ou
 ## 2. Preprocessing:
 
 - [ ] Standardization
-- [ ] ?
+- [X] Word2Vec (Averaging)
 
 
 ## 3. Network:
