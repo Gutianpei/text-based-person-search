@@ -3,8 +3,8 @@
 #import torchvision
 import numpy as np
 import dataset
-from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, InputLayer
-from keras.models import Sequential, Model
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, InputLayer, LSTM
+from keras.models import Sequential, Mode
 from keras import optimizers
 from keras.applications.resnet50 import ResNet50
 import keras
@@ -30,6 +30,7 @@ restnet.summary()
 
 ##### Model #############
 model = Sequential()
+# model.add(Bidirectional(LSTM(512)))
 model.add(restnet)
 model.add(Dense(512, activation='relu', input_shape=input_shape))
 model.add(Dropout(0.3))
