@@ -15,7 +15,7 @@ python3 scripts/demo_inference.py --indir ../text-based-person-search/data/ --ou
 
 - [x] Load raw image with shape (n,img_height, img_width, 3)
 
-- [ ] Load raw captions with shape (n, ???)
+- [X] Load raw captions with shape (2n, vector_size) (2 captions for each image)
 
 - [ ] Run Alphapose get all keypoints and crop body parts
 
@@ -31,5 +31,3 @@ python3 scripts/demo_inference.py --indir ../text-based-person-search/data/ --ou
 - [x] Build resnet50 and get output feature vector
 
 - [ ] Bi-LSTM, X is captions matrix and y is resnet output
-
-
