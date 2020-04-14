@@ -53,9 +53,11 @@ class dataset():
         # convert
         caption_embeddings = []
         for i in tokens:
-            temp_emb = np.zeros(vector_size)
+            temp_emb = []
             for j in i:
-                temp_emb += word_model[j]
-            caption_embeddings.append(temp_emb/len(i))
+                temp_emb.append(word_model[j])
+            caption_embeddings.append(np.array(temp_emb))
 
-        return np.array(caption_embeddings)
+        caption_embeddings = sequence.pad_sequences(caption_embeddings, maxlen=None, dtype='float', padding='post', truncating='post', value=0.0)
+
+        return caption_embeddings

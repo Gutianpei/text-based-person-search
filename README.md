@@ -15,7 +15,7 @@ python3 scripts/demo_inference.py --indir ../text-based-person-search/data/ --ou
 
 - [x] Load raw image with shape (n,img_height, img_width, 3)
 
-- [X] Load raw captions with shape (2n, vector_size) (2 captions for each image)
+- [X] Load raw captions with shape (2n, step_size=99, vector_size) (2 captions for each image)
 
 - [ ] Run Alphapose get all keypoints and crop body parts
 

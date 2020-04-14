@@ -30,7 +30,7 @@ restnet.summary()
 
 ##### Model #############
 model = Sequential()
-# model.add(Bidirectional(LSTM(512)))
+# model.add(Bidirectional(LSTM(20, return_sequences=True), input_shape=(99, 300)))
 model.add(restnet)
 model.add(Dense(512, activation='relu', input_shape=input_shape))
 model.add(Dropout(0.3))
