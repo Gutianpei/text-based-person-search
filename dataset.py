@@ -64,6 +64,6 @@ class dataset():
                 break
 
 
-        caption_embeddings = sequence.pad_sequences(caption_embeddings, maxlen=None, dtype='float', padding='post', truncating='post', value=0.0)
+        caption_embeddings = sequence.pad_sequences(caption_embeddings, maxlen=50, dtype='float', padding='post', truncating='post', value=0.0)
 
         return caption_embeddings
