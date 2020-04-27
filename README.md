@@ -33,3 +33,7 @@ python3 scripts/demo_inference.py --indir ../text-based-person-search/data/ --ou
 
 - [X] Bi-LSTM
 - [ ] Structure (2 directions)
+
+## 4. Evaluation:
+- [ ] Rank x score
+- [ ] mAP (reference: https://github.com/YingZhangDUT/Cross-Modal-Projection-Learning/blob/master/evaluation/retrieval_eval.py)

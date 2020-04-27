@@ -10,11 +10,11 @@ from keras.preprocessing import sequence
 from keras.applications.resnet50 import preprocess_input
 
 class dataset():
-    def __init__(self, dataset_dir, new_height, new_width, n):
+    def __init__(self, dataset_dir, new_height, new_width):
         self.dataset_dir = dataset_dir
         self.new_height = new_height
         self.new_width = new_width
-        self.n = n
+        # self.n = n
 
     def get_img(self):
         js_data = json.load(open(self.dataset_dir + "/caption_all.json"))
@@ -29,8 +29,8 @@ class dataset():
             #print(image)
             image = image[:,:,::-1] #BGR to RGB
             images.append(image)
-            if len(images) == self.n:
-                break
+            # if len(images) == self.n:
+            #     break
 
             #Read captions
 
@@ -60,10 +60,10 @@ class dataset():
             for j in i:
                 temp_emb.append(word_model[j])
             caption_embeddings.append(np.array(temp_emb))
-            if len(caption_embeddings) == 2*self.n:
-                break
+            # if len(caption_embeddings) == 2*self.n:
+            #     break
 
 
-        caption_embeddings = sequence.pad_sequences(caption_embeddings, maxlen=None, dtype='float', padding='post', truncating='post', value=0.0)
+        caption_embeddings = sequence.pad_sequences(caption_embeddings, maxlen=50, dtype='float', padding='post', truncating='post', value=0.0)
 
         return caption_embeddings
