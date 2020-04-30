@@ -16,7 +16,7 @@ class dataset():
         self.new_width = new_width
         # self.n = n
 
-    def get_img(self):
+    def get_data(self):
         js_data = json.load(open(self.dataset_dir + "/caption_all.json"))
         # Check captions.json for format
         images = []
@@ -29,19 +29,14 @@ class dataset():
             #print(image)
             image = image[:,:,::-1] #BGR to RGB
             images.append(image)
-            # if len(images) == self.n:
-            #     break
+            images.append(image)
+            if len(images) == 8:
+                 break
 
-            #Read captions
-
-
-        #return images, captions
-        return np.array(images)
-
-    def get_caption(self):
+        #Read captions
         vector_size = 50
 
-        js_data = json.load(open(self.dataset_dir + "/caption_all.json"))
+        #js_data = json.load(open(self.dataset_dir + "/caption_all.json"))
         captions = [i['captions'] for i in js_data]
         flatten_caps = sum(captions, [])
 
@@ -60,10 +55,9 @@ class dataset():
             for j in i:
                 temp_emb.append(word_model[j])
             caption_embeddings.append(np.array(temp_emb))
-            # if len(caption_embeddings) == 2*self.n:
-            #     break
-
+            if len(caption_embeddings) == 8:
+                 break
 
         caption_embeddings = sequence.pad_sequences(caption_embeddings, maxlen=50, dtype='float', padding='post', truncating='post', value=0.0)
 
-        return caption_embeddings
+        return np.array(images), np.array(caption_embeddings)
