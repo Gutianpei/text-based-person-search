@@ -4,7 +4,7 @@ import cv2
 import random
 import json
 import numpy as np
-from gensim.models import Word2Vec
+from gensim.models import KeyedVectors
 from nltk.tokenize import RegexpTokenizer
 from keras.preprocessing import sequence
 from keras.applications.resnet50 import preprocess_input
@@ -65,8 +65,13 @@ class DataGenerator(keras.utils.Sequence):
 
             imgs[i,] = image
 
-            caps[i,] = XXXXX#TODO
-
+            # gen caps
+            caption = data['captions'][0]
+            tokenizer = RegexpTokenizer(r'\w+')
+            tokens = [j.lower() for j in tokenizer.tokenize(caption)]
+            word_model = KeyedVectors.load_word2vec_format('word_model.bin')
+            caps[i,] = np.array([word_model[i] for i in tokens])
+        caps = sequence.pad_sequences(caps, maxlen=50, dtype='float', padding='post', truncating='post', value=0.0)
 
         neg_img = np.roll(imgs, 12, axis=0)
         neg_cap = np.roll(caps, 12, axis=0)
