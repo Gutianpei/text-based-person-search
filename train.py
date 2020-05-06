@@ -20,10 +20,10 @@ import json
 from keras.optimizers import Adam
 from keras import regularizers
 #
-# # GPU config
-# config = tf.ConfigProto( device_count = {'GPU': 1 , 'CPU': 4} )
-# sess = tf.Session(config=config)
-# keras.backend.set_session(sess)
+# GPU config
+config = tf.ConfigProto( device_count = {'GPU': 1 , 'CPU': 4} )
+sess = tf.Session(config=config)
+keras.backend.set_session(sess)
 #
 #
 #
@@ -48,12 +48,6 @@ params = {'batch_size': 64,
 
 train_gen = DataGenerator(train_data, **params)
 val_gen = DataGenerator(val_data, **params)
-        # self.height = height
-        # self.width = width
-        # self.batch_size = batch_size
-        # self.shuffle = shuffle
-        # self.dataset_path = dataset_path
-        # json_data = self.json_data
 
 ###### Resnet ########
 resnet = ResNet50(include_top = False, weights = 'imagenet', input_shape=(384,128,3))
@@ -78,6 +72,7 @@ cap_in = Input(shape=(50,50))
 bi_lstm = Bidirectional(LSTM(20, return_sequences=True))(cap_in)
 cap_flat = Flatten()(bi_lstm)
 cap_nn = Dense(1024,kernel_regularizer = regularizers.l2(0.),activation = 'linear')(cap_flat)
+#BN here?
 
 inner = Dot(axes=1)([res_bn, cap_nn])
 
@@ -114,10 +109,9 @@ model.compile(loss="mean_squared_error",
 
 history = model.fit_generator(generator = train_gen,
                               epochs=100,
-                              batch_size=batch_size,
                               validation_data=val_gen,
-                              use_multiprocessing = True,
-                              workers = 4,
+                              # use_multiprocessing = True,
+                              # workers = 4,
                               verbose=1)
 #model.save('')
 

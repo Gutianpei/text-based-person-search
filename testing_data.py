@@ -4,20 +4,7 @@ import copy
 import cv2
 import numpy as np
 
-# js_data = json.load(open("../datasets/CUHK-PEDES/caption_all.json"))
-# for data in js_data:
-#     if len(data["captions"])!=2:
-#         print(data["id"])
-#         print(len(data["captions"]))
-# exit()
-#
-#
-# js_data = json.load(open("caption_val.json"))
-# print(len(js_data))
-# exit()
-#
-#
-#
+
 # def Diff(li1, li2):
 #     return (list(set(li1) - set(li2)))
 #
@@ -40,15 +27,24 @@ import numpy as np
 # val_data = []
 # js_data = json.load(open("../datasets/CUHK-PEDES/caption_all.json"))
 # for data in js_data:
-#     if data["id"] in test:
-#         test_data.append(data)
-#     elif data["id"] in val:
-#         val_data.append(data)
+#     if len(data["captions"]) == 2:
 #
-#     else:
-#         train_data.append(data)
+#         for cap in data["captions"]:
+#             d_new = copy.deepcopy(data)
+#             d_new["captions"] = cap
+#
+#             if d_new["id"] in test:
+#                 test_data.append(d_new)
+#             elif d_new["id"] in val:
+#                 val_data.append(d_new)
+#
+#             else:
+#                 train_data.append(d_new)
 #
 #
+# random.shuffle(train_data)
+# random.shuffle(test_data)
+# random.shuffle(val_data)
 #
 # with open('caption_test.json', 'w') as outfile:
 #     json.dump(test_data, outfile)
@@ -85,7 +81,7 @@ def get_test(json_path,dataset_path):
         imgs.append(image)
 
         captions = data["captions"]
-        #TODO
+        ###TODO
 
 
     return np.array(ids),np.array(imgs),np.array(caps)

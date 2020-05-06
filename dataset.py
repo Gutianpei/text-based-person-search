@@ -13,10 +13,10 @@ import keras
 
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
-    def __init__(self, json_data, height, witdh, dataset_path, batch_size=32,
+    def __init__(self, json_data, height, width, dataset_path, batch_size=32,
                  shuffle=True):
         'Initialization'
-        json_data = self.json_data
+        self.json_data = json_data
         self.batch_size = batch_size
         self.height = height
         self.width = width
@@ -39,8 +39,9 @@ class DataGenerator(keras.utils.Sequence):
 
         # Generate data
         pos_img, pos_cap, neg_img, neg_cap = self.__data_generation(json_temp)
+        y =np.array([0]*self.batch_size).reshape(self.batch_size,1)
 
-        return X, y
+        return [pos_img, pos_cap, neg_img, neg_cap], y
 
     def on_epoch_end(self):
         'Updates indexes after each epoch'
@@ -52,9 +53,8 @@ class DataGenerator(keras.utils.Sequence):
         'Generates data containing batch_size samples' # X : (n_samples, *dim, n_channels)
         # Initialization
         imgs = np.empty((self.batch_size, self.height, self.width, 3))
-        caps = np.empty((self.batch_size, 50, 50))
+        caps = []
         #X = np.empty((self.batch_size, *self.dim, self.n_channels))
-        y =np.array([0]*self.batch_size).reshape(self.batch_size,1)
 
         # Generate data
         for i, data in enumerate(json_temp):
@@ -66,13 +66,13 @@ class DataGenerator(keras.utils.Sequence):
             imgs[i,] = image
 
             # gen caps
-            caption = data['captions'][0]
+            caption = data['captions']
             tokenizer = RegexpTokenizer(r'\w+')
             tokens = [j.lower() for j in tokenizer.tokenize(caption)]
             word_model = KeyedVectors.load_word2vec_format('word_model.bin')
-            caps[i,] = np.array([word_model[i] for i in tokens])
+            caps.append(np.array([word_model[i] for i in tokens]))
         caps = sequence.pad_sequences(caps, maxlen=50, dtype='float', padding='post', truncating='post', value=0.0)
-
+        #print(caps.shape)
         neg_img = np.roll(imgs, 12, axis=0)
         neg_cap = np.roll(caps, 12, axis=0)
         return imgs, caps, neg_img, neg_cap
