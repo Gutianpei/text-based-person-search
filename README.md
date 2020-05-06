@@ -30,9 +30,7 @@ python3 scripts/demo_inference.py --indir ../text-based-person-search/data/ --ou
 ## 3. Network:
 
 - [x] Build resnet50 and get output feature vector
-
 - [X] Bi-LSTM
-- [ ] Structure (2 directions)
 
 ## 4. Evaluation:
 - [ ] Rank x score
