@@ -15,6 +15,7 @@ import keras
 import matplotlib.pyplot as plt
 from keras import backend as K
 import pickle
+import json
 # from utils.loss import triplet_loss_adapted_from_tf, cos_distance
 from keras.optimizers import Adam
 from keras import regularizers
@@ -29,36 +30,30 @@ from keras import regularizers
 #
 #
 # load images and captions
-dpath = "/Users/hty/dataset/CUHK-PEDES"
+dpath = "../datasets/CUHK-PEDES/"
+train_path = "caption_train.json"
+val_path = "caption_val.json"
 IMG_HEIGHT = 384
 IMG_WIDTH = 128
-batch_size = 1
-# # https://towardsdatascience.com/deep-learning-using-transfer-learning-python-code-for-resnet50-8acdfb3a2d38
-data = dataset.dataset(dataset_dir = dpath, new_width = IMG_WIDTH, new_height = IMG_HEIGHT)
-#
-pos_img_data, pos_cap_data = data.get_data()
-neg_img_data= [pos_img_data[(i + 3) % 8] for i in range(8)]
-neg_cap_data = [pos_cap_data[(i + 3) % 8] for i in range(8)]
-pos_img_data = np.array(pos_img_data)
-neg_img_data = np.array(neg_img_data)
-pos_cap_data = np.array(pos_cap_data)
-neg_cap_data = np.array(neg_cap_data)
+batch_size = 128
+train_data = json.load(open(train_path))
+val_data = json.load(open(val_path))
 
+params = {'batch_size': 64,
+          'height': IMG_HEIGHT,
+          'width': IMG_WIDTH,
+          'shuffle': True,
+          'dataset_path': dpath,
+          }
 
-y = np.array([0]*8).reshape(8,1)
-#
-# print(images.shape)
-# input_shape = images.shape[1:]
-#
-# ###### Renset50 ############
-# print("Resnet running")
-# img_feat = run_resnet50(images)
-# # print(img_feat.shape)
-# n2_feat = np.concatenate((img_feat, img_feat),axis = 0)
-# # print(captions.shape)
-# print(n2_feat.shape)
-# pickle.dump(n2_feat, open("resnet50_avgp.pkl", "wb"))
-# exit()
+train_gen = DataGenerator(train_data, **params)
+val_gen = DataGenerator(val_data, **params)
+        # self.batch_size = batch_size
+        # self.height = height
+        # self.width = width
+        # self.shuffle = shuffle
+        # self.dataset_path = dataset_path
+        # json_data = self.json_data
 
 ###### Resnet ########
 resnet = ResNet50(include_top = False, weights = 'imagenet', input_shape=(384,128,3))
@@ -117,10 +112,12 @@ model.compile(loss="mean_squared_error",
              optimizer = "adam",
              metrics = ['mse'])
 
-history = model.fit([pos_img_data, pos_cap_data, neg_img_data, neg_cap_data], y,
-                              epochs=30,
+history = model.fit_generator(generator = train_gen,
+                              epochs=100,
                               batch_size=batch_size,
-                              validation_split=0.1,
+                              validation_data=val_gen,
+                              use_multiprocessing = True,
+                              workers = 4,
                               verbose=1)
 #model.save('')
 
