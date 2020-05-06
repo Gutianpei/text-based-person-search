@@ -13,7 +13,7 @@ import keras
 
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
-    def __init__(self,  json_data, batch_size=32, height, witdh, dataset_path,
+    def __init__(self, json_data, height, witdh, dataset_path, batch_size=32,
                  shuffle=True):
         'Initialization'
         json_data = self.json_data

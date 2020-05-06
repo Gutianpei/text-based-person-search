@@ -3,7 +3,7 @@
 #import torchvision
 import numpy as np
 import tensorflow as tf
-import dataset
+from dataset import DataGenerator
 from keras.layers import Conv2D, MaxPooling2D, Concatenate,Flatten, Input, Dense, Dropout, InputLayer, LSTM, Bidirectional,Dot, Add, Subtract,BatchNormalization
 from keras.applications.resnet50 import ResNet50
 from keras.models import Sequential, Model
@@ -48,9 +48,9 @@ params = {'batch_size': 64,
 
 train_gen = DataGenerator(train_data, **params)
 val_gen = DataGenerator(val_data, **params)
-        # self.batch_size = batch_size
         # self.height = height
         # self.width = width
+        # self.batch_size = batch_size
         # self.shuffle = shuffle
         # self.dataset_path = dataset_path
         # json_data = self.json_data
