@@ -13,10 +13,11 @@ import keras
 
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
-    def __init__(self, json_data, height, width, dataset_path, batch_size=32,
+    def __init__(self, json_data, word_model, height, width, dataset_path, batch_size=32,
                  shuffle=True):
         'Initialization'
         self.json_data = json_data
+        self.word_model = word_model
         self.batch_size = batch_size
         self.height = height
         self.width = width
@@ -32,6 +33,8 @@ class DataGenerator(keras.utils.Sequence):
     def __getitem__(self, index):
         'Generate one batch of data'
         # Generate indexes of the batch
+
+
         indexes = self.indexes[index*self.batch_size:(index+1)*self.batch_size]
 
         # Find list of IDs
@@ -69,8 +72,8 @@ class DataGenerator(keras.utils.Sequence):
             caption = data['captions']
             tokenizer = RegexpTokenizer(r'\w+')
             tokens = [j.lower() for j in tokenizer.tokenize(caption)]
-            word_model = KeyedVectors.load_word2vec_format('word_model.bin')
-            caps.append(np.array([word_model[i] for i in tokens]))
+            #word_model = KeyedVectors.load_word2vec_format('word_model.bin')
+            caps.append(np.array([self.word_model[i] for i in tokens]))
         caps = sequence.pad_sequences(caps, maxlen=50, dtype='float', padding='post', truncating='post', value=0.0)
         #print(caps.shape)
         neg_img = np.roll(imgs, 12, axis=0)

@@ -11,6 +11,7 @@ from keras import optimizers
 from keras.utils import plot_model
 # from resnet50 import run_resnet50
 from keras.utils import plot_model
+from gensim.models import KeyedVectors
 import keras
 import matplotlib.pyplot as plt
 from keras import backend as K
@@ -46,8 +47,9 @@ params = {'batch_size': 64,
           'dataset_path': dpath,
           }
 
-train_gen = DataGenerator(train_data, **params)
-val_gen = DataGenerator(val_data, **params)
+word_model = KeyedVectors.load_word2vec_format('word_model.bin')
+train_gen = DataGenerator(train_data, word_model,  **params)
+val_gen = DataGenerator(val_data, word_model, **params)
 
 ###### Resnet ########
 resnet = ResNet50(include_top = False, weights = 'imagenet', input_shape=(384,128,3))
@@ -60,23 +62,23 @@ for layer in resnet.layers:
 ##### Model #############
 img_in = Input(shape=(384,128,3))
 res_in = resnet(img_in)
-res_conv = Conv2D(512,(1,1),activation='relu')(res_in)
-res_pool = MaxPooling2D(pool_size = (2,2))(res_conv)
-res_flat = Flatten()(res_pool)  #shape: n*12*4*2048 -> n*(12*4*2048)
-res_nn = Dense(1024, activation = 'linear')(res_flat)
-res_bn = BatchNormalization()(res_nn)
-
-
+# res_conv = Conv2D(512,(1,1),activation='relu')(res_in)
+# res_conv2 = Conv2D(512,(1,1),activation='relu')(res_conv)
+# res_pool = MaxPooling2D(pool_size = (3,3))(res_conv2)
+res_flat = Flatten()(res_in)  #shape: n*12*4*2048 -> n*(12*4*2048)
+res_nn = Dense(1024, kernel_regularizer = regularizers.l2(0.),activation = 'linear')(res_flat)
 
 cap_in = Input(shape=(50,50))
 bi_lstm = Bidirectional(LSTM(20, return_sequences=True))(cap_in)
 cap_flat = Flatten()(bi_lstm)
 cap_nn = Dense(1024,kernel_regularizer = regularizers.l2(0.),activation = 'linear')(cap_flat)
+
 #BN here?
 
-inner = Dot(axes=1)([res_bn, cap_nn])
+inner = Dot(axes=1, normalize=True)([res_nn, cap_nn])
 
 base_model = Model(input = [img_in,cap_in], output = inner)
+print(base_model.summary())
 #plot_model(base_model, to_file='base_model.png', show_shapes = True, show_layer_names = True)
 ########
 
@@ -100,7 +102,7 @@ out = Add()([dense_up,dense_low])
 
 model = Model(input = [pos_img, pos_cap, neg_img, neg_cap], output = out)
 
-#print(model.summary())
+
 #plot_model(model, to_file='model.png', show_shapes = True, show_layer_names = True)
 
 model.compile(loss="mean_squared_error",
@@ -113,7 +115,7 @@ history = model.fit_generator(generator = train_gen,
                               # use_multiprocessing = True,
                               # workers = 4,
                               verbose=1)
-#model.save('')
+model.save('')
 
 # print("Training Accuracy: " + str(history.history['cosine_proximity'][-1]))
 # print("Testing Accuracy: " + str(history.history['val_cosine_proximity'][-1]))
