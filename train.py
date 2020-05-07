@@ -21,6 +21,7 @@ import json
 # from utils.loss import triplet_loss_adapted_from_tf, cos_distance
 from keras.optimizers import Adam
 from keras import regularizers
+import argparse
 
 # load images and captions
 dpath = "../datasets/CUHK-PEDES/"
@@ -43,6 +44,7 @@ word_model = KeyedVectors.load_word2vec_format('word_model.bin')
 train_gen = DataGenerator(train_data, word_model,  **params)
 val_gen = DataGenerator(val_data, word_model, **params)
 
+parser = argparse.ArgumentParser(description='text_img_matching')
 parser.add_argument('--model-path', type=str, required=False, default=None,
                     help='Path to saved model')
 
