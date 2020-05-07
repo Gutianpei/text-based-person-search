@@ -62,10 +62,10 @@ for layer in resnet.layers:
 ##### Model #############
 img_in = Input(shape=(384,128,3))
 res_in = resnet(img_in)
-# res_conv = Conv2D(512,(1,1),activation='relu')(res_in)
+res_conv = Conv2D(512,(1,1),activation='relu')(res_in)
 # res_conv2 = Conv2D(512,(1,1),activation='relu')(res_conv)
-# res_pool = MaxPooling2D(pool_size = (3,3))(res_conv2)
-res_flat = Flatten()(res_in)  #shape: n*12*4*2048 -> n*(12*4*2048)
+res_pool = MaxPooling2D(pool_size = (3,3))(res_conv)
+res_flat = Flatten()(res_pool)  #shape: n*12*4*2048 -> n*(12*4*2048)
 res_nn = Dense(1024, kernel_regularizer = regularizers.l2(0.),activation = 'linear')(res_flat)
 
 cap_in = Input(shape=(50,50))
@@ -110,12 +110,12 @@ model.compile(loss="mean_squared_error",
              metrics = ['mse'])
 
 history = model.fit_generator(generator = train_gen,
-                              epochs=100,
+                              epochs=3,
                               validation_data=val_gen,
                               # use_multiprocessing = True,
                               # workers = 4,
                               verbose=1)
-model.save('')
+model.save('default1.h5')
 
 # print("Training Accuracy: " + str(history.history['cosine_proximity'][-1]))
 # print("Testing Accuracy: " + str(history.history['val_cosine_proximity'][-1]))
