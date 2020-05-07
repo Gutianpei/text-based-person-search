@@ -11,6 +11,9 @@ import tqdm
 def compute_dot(cap, imgs, model):
 	score = []
 	cap.shape = (1,50,50)
+	print()
+	print("----------------------")
+	print("Computing dot product")
 	for img in tqdm.tqdm(imgs):
 		img.shape = (1,384,128,3)
 		#start = time.time()
@@ -19,29 +22,30 @@ def compute_dot(cap, imgs, model):
 		#print("Model run in: " + str(end))
 	return score
 
-def process_img_id(imgs, ids):
-	''' Remove duplicate based on imgs'''
-	imgid = []
-	for i in range(len(imgs)):
-		imgs[i].reshape()
-		imgid.append([imgs, ids])
-
-	return ids, imgs
+# def process_img_id(imgs, ids):
+# 	''' Remove duplicate based on imgs'''
+# 	imgid = []
+# 	for i in range(len(imgs)):
+# 		imgs[i].reshape()
+# 		imgid.append([imgs, ids])
+#
+# 	return ids, imgs
 
 
 #print(model.summary())
 # exit()
 word_model = KeyedVectors.load_word2vec_format('word_model.bin')
 ids, imgs, caps = get_test("caption_test.json", "../datasets/CUHK-PEDES", word_model)
-ids, imgs = process_img_id(imgs, ids)
+# ids, imgs = process_img_id(imgs, ids)
 # print(ids.shape)
 # print(caps.shape)
 # print(imgs.shape)
 # exit()
 
-model = load_model("default.h5").layers[4]
+model = load_model("../default.h5").layers[4]
 
 print("data and model loaded")
+print()
 # ids_unique = np.unique(ids)
 # imgs_unique = np.unique(imgs)
 
@@ -66,7 +70,7 @@ for cap_id, cap in enumerate(caps):
 
 	print("True ID: " + str(ids[cap_id]))
 	print("Predicted: ")
-	print(res_ids[:20])
+	print(res_ids[:40])
 	print("")
 	for i, res_id in enumerate(res_ids):
 		match = False
@@ -74,11 +78,11 @@ for cap_id, cap in enumerate(caps):
 			match = True
 		if i == 0 and match:
 			rank1 += 1
-		if i == 4 and match:
+		if i == 9 and match:
 			rank5 += 1
-		if i==9 and match:
+		if i== 19 and match:
 			rank10 += 1
-		if i == 19:
+		if i == 39:
 			if match > 0:
 				rank20 += 1
 
