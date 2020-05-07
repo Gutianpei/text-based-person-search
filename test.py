@@ -67,7 +67,7 @@ ids, imgs, caps = get_test("caption_test.json", "../datasets/CUHK-PEDES", word_m
 # print(imgs.shape)
 # exit()
 
-model = load_model("../default.h5").layers[4]
+model = load_model("../best_model.h5").layers[4]
 # s = np.squeeze(model.predict([imgs, caps]))
 # print(s[:20])
 # exit()
