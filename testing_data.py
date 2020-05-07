@@ -63,9 +63,9 @@ def get_test(json_path, dataset_path, word_model):
             dataset_path:  .../.../CUHK_PEDES
         Returns:
             ndarray
-            imgs: (1000,384,128,3)
-            ids: (1000,1)
-            caps: (2xxx,50,50)
+            imgs: (2000,384,128,3)
+            ids: (2000,1)
+            caps: (2000,50,50)
     '''
     ids = []
     imgs = []
@@ -78,13 +78,14 @@ def get_test(json_path, dataset_path, word_model):
         image = cv2.resize(image, (128, 384))
         image = image[:,:,::-1] #BGR to RGB
 
-        ids.append(js_data["ids"])
+        ids.append(data["id"])
         imgs.append(image)
 
         caption = data['captions']
         tokenizer = RegexpTokenizer(r'\w+')
         tokens = [j.lower() for j in tokenizer.tokenize(caption)]
         caps.append(np.array([word_model[i] for i in tokens]))
+        #print(len(caps))
     caps = sequence.pad_sequences(caps, maxlen=50, dtype='float', padding='post', truncating='post', value=0.0)
 
     return np.array(ids),np.array(imgs),np.array(caps)
