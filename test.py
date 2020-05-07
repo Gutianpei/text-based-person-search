@@ -4,7 +4,7 @@ from keras.models import load_model
 import numpy as np
 from testin_data import get_test
 from collections import Counter
-
+from gensim.models import KeyedVectors
 
 def compute_dot(cap, imgs, model):
 	score = []
@@ -13,8 +13,9 @@ def compute_dot(cap, imgs, model):
 	return score
 
 model = load_model("").layers[4]
+word_model = KeyedVectors.load_word2vec_format('word_model.bin')
 
-ids, imgs, caps = get_test("caption_test.json","../datasets/CUHK-PEDES")
+ids, imgs, caps = get_test("caption_test.json", "../datasets/CUHK-PEDES", word_model)
 
 # ids_unique = np.unique(ids)
 # imgs_unique = np.unique(imgs)

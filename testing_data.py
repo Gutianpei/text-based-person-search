@@ -3,7 +3,8 @@ import random
 import copy
 import cv2
 import numpy as np
-
+from nltk.tokenize import RegexpTokenizer
+from keras.preprocessing import sequence
 
 # def Diff(li1, li2):
 #     return (list(set(li1) - set(li2)))
@@ -55,7 +56,7 @@ import numpy as np
 # with open('caption_val.json', 'w') as outfile:
 #     json.dump(val_data, outfile)
 
-def get_test(json_path,dataset_path):
+def get_test(json_path, dataset_path, word_model):
     ''' Read from caption_test.json
         Args:
             json_path:  .../.../caption_test.json
@@ -80,8 +81,10 @@ def get_test(json_path,dataset_path):
         ids.append(js_data["ids"])
         imgs.append(image)
 
-        captions = data["captions"]
-        ###TODO
-
+        caption = data['captions']
+        tokenizer = RegexpTokenizer(r'\w+')
+        tokens = [j.lower() for j in tokenizer.tokenize(caption)]
+        caps.append(np.array([word_model[i] for i in tokens]))
+    caps = sequence.pad_sequences(caps, maxlen=50, dtype='float', padding='post', truncating='post', value=0.0)
 
     return np.array(ids),np.array(imgs),np.array(caps)
