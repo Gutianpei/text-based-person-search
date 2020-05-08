@@ -13,7 +13,7 @@ import keras
 
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
-    def __init__(self, json_data, word_model, height, width, dataset_path, batch_size=32,
+    def __init__(self, json_data, word_model, height, width, dataset_path, time_step, batch_size=32,
                  shuffle=True):
         'Initialization'
         self.json_data = json_data
@@ -23,6 +23,7 @@ class DataGenerator(keras.utils.Sequence):
         self.width = width
         self.shuffle = shuffle
         self.dataset_path = dataset_path
+        self.time_step = time_step
 
         self.on_epoch_end()
 
@@ -74,7 +75,7 @@ class DataGenerator(keras.utils.Sequence):
             tokens = [j.lower() for j in tokenizer.tokenize(caption)]
             #word_model = KeyedVectors.load_word2vec_format('word_model.bin')
             caps.append(np.array([self.word_model[i] for i in tokens]))
-        caps = sequence.pad_sequences(caps, maxlen=50, dtype='float', padding='post', truncating='post', value=0.0)
+        caps = sequence.pad_sequences(caps, maxlen=self.time_step, dtype='float', padding='post', truncating='post', value=0.0)
         #print(caps.shape)
         neg_img = np.roll(imgs, 12, axis=0)
         neg_cap = np.roll(caps, 12, axis=0)

@@ -56,7 +56,7 @@ from keras.preprocessing import sequence
 # with open('caption_val.json', 'w') as outfile:
 #     json.dump(val_data, outfile)
 
-def get_test(json_path, dataset_path, word_model):
+def get_test(json_path, dataset_path, word_model, time_step):
     ''' Read from caption_test.json
         Args:
             json_path:  .../.../caption_test.json
@@ -86,6 +86,6 @@ def get_test(json_path, dataset_path, word_model):
         tokens = [j.lower() for j in tokenizer.tokenize(caption)]
         caps.append(np.array([word_model[i] for i in tokens]))
         #print(len(caps))
-    caps = sequence.pad_sequences(caps, maxlen=50, dtype='float', padding='post', truncating='post', value=0.0)
+    caps = sequence.pad_sequences(caps, maxlen=time_step, dtype='float', padding='post', truncating='post', value=0.0)
 
     return np.array(ids),np.array(imgs),np.array(caps)

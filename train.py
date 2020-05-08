@@ -29,6 +29,8 @@ train_path = "caption_train.json"
 val_path = "caption_val.json"
 IMG_HEIGHT = 384
 IMG_WIDTH = 128
+TIME_STEP = 50
+EMBEDDING_SIZE = 50
 batch_size = 128
 train_data = json.load(open(train_path))
 val_data = json.load(open(val_path))
@@ -38,6 +40,7 @@ params = {'batch_size': 64,
           'width': IMG_WIDTH,
           'shuffle': True,
           'dataset_path': dpath,
+          'time_step': 50
           }
 
 word_model = KeyedVectors.load_word2vec_format('word_model.bin')
@@ -50,7 +53,7 @@ parser.add_argument('--model-path', type=str, required=False, default=None,
 
 def model_gen():
     ###### Resnet ########
-    resnet = ResNet50(include_top = False, weights = 'imagenet', input_shape=(384,128,3))
+    resnet = ResNet50(include_top = False, weights = 'imagenet', input_shape=(IMG_HEIGHT,IMG_WIDTH,3))
     output = resnet.layers[-1].output
     #output = Dense(1024)
     resnet = Model(resnet.input, output=output)
@@ -58,7 +61,7 @@ def model_gen():
         layer.trainable = False
 
     ##### Model #############
-    img_in = Input(shape=(384,128,3))
+    img_in = Input(shape=(IMG_HEIGHT,IMG_WIDTH,3))
     res_in = resnet(img_in)
     # res_conv = Conv2D(512,(1,1),activation='relu')(res_in)
     # res_conv2 = Conv2D(512,(1,1),activation='relu')(res_conv)
@@ -67,7 +70,7 @@ def model_gen():
     res_nn = Dense(1024, activation = 'linear')(res_flat)
     res_l2 = Lambda(lambda x: tf.math.l2_normalize(x, axis=1))(res_nn) # L2 normalize embeddings
 
-    cap_in = Input(shape=(50,50))
+    cap_in = Input(shape=(TIME_STEP,EMBEDDING_SIZE))
     bi_lstm = Bidirectional(LSTM(20, return_sequences=True))(cap_in)
     cap_flat = Flatten()(bi_lstm)
     cap_nn = Dense(1024, activation = 'linear')(cap_flat)
@@ -76,15 +79,15 @@ def model_gen():
     inner = Dot(axes=1, normalize=True)([res_l2, cap_l2])
 
     base_model = Model(input = [img_in,cap_in], output = inner)
-    print(base_model.summary())
-    plot_model(base_model, to_file='base_model.png', show_shapes = True, show_layer_names = True)
+    # print(base_model.summary())
+    # plot_model(base_model, to_file='base_model.png', show_shapes = True, show_layer_names = True)
     ########
 
     ########
-    pos_img = Input(shape = (384,128,3))
-    pos_cap = Input(shape=(50,50))
-    neg_img = Input(shape = (384,128,3))
-    neg_cap = Input(shape=(50,50))
+    pos_img = Input(shape = (IMG_HEIGHT,IMG_WIDTH,3))
+    pos_cap = Input(shape=(TIME_STEP,EMBEDDING_SIZE))
+    neg_img = Input(shape = (IMG_HEIGHT,IMG_WIDTH,3))
+    neg_cap = Input(shape=(TIME_STEP,EMBEDDING_SIZE))
 
     pos_s = base_model([pos_img, pos_cap])
     neg_s1 = base_model([neg_img, pos_cap])
@@ -100,7 +103,7 @@ def model_gen():
     #out = Add()([dense_up,dense_low])
 
     model = Model(input = [pos_img, pos_cap, neg_img, neg_cap], output = stacked)
-    plot_model(model, to_file='model.png', show_shapes = True, show_layer_names = True)
+    # plot_model(model, to_file='model.png', show_shapes = True, show_layer_names = True)
 
     model.compile(loss=triplet_loss,
                  optimizer = "adam",
@@ -138,7 +141,7 @@ def main():
         model = load_model(load_network_path)
 
 
-    checkpoint = ModelCheckpoint("best_model.h5", monitor='loss', verbose=1,
+    checkpoint = ModelCheckpoint("../best_model.h5", monitor='loss', verbose=1,
         save_best_only=True, mode='auto', period=1)
     history = model.fit_generator(generator=train_gen,
                                   epochs=100,
@@ -147,7 +150,7 @@ def main():
                                   # workers = 4,
                                   verbose=1,
                                   callbacks=[checkpoint])
-    model.save('last_epoch_model.h5')
+    model.save('../last_epoch_model.h5')
 
     # print("Training Accuracy: " + str(histor y.history['cosine_proximity'][-1]))
     # print("Testing Accuracy: " + str(history.history['val_cosine_proximity'][-1]))

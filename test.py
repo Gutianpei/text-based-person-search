@@ -69,7 +69,8 @@ def triplet_loss(y_true, y_pred):
     return K.mean(loss)
 
 word_model = KeyedVectors.load_word2vec_format('word_model.bin')
-ids, imgs, caps = get_test("caption_test.json", "../datasets/CUHK-PEDES", word_model)
+TIME_STEP = 50
+ids, imgs, caps = get_test("caption_test.json", "../datasets/CUHK-PEDES", word_model, TIME_STEP)
 
 model = load_model("../best_model.h5", custom_objects={'tf': tf, 'triplet_loss': triplet_loss, 'K': K}).layers[4]
 img_model, cap_model = get_models(model)	# get img path and cap path and resemble to new models
