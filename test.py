@@ -43,10 +43,6 @@ def compute_score(mat, ids):
 				break
 		idx += 1
 
-		if i % 500 == 0:
-			print('progress:')
-			print(i/len(mat))
-
 	print("Rank1: ")
 	print(rank1/(idx+1))
 	print("Rank5: ")
