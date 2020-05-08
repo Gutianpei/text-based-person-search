@@ -104,18 +104,17 @@ def model_gen():
 
     model.compile(loss=triplet_loss,
                  optimizer = "adam",
-                 metrics = [accuracy])
+                )
 
     return model
 
 def triplet_loss(y_true, y_pred):
     margin = K.constant(0.2)
-    loss = K.maximum(K.constant(0),margin - y_pred[:,0,0] + y_pred[0:,1,0])
-        + K.maximum(K.constant(0),margin - y_pred[:,0,0] + y_pred[0:,2,0])
+    loss = K.maximum(K.constant(0),margin - y_pred[:,0,0] + y_pred[0:,1,0])+ K.maximum(K.constant(0),margin - y_pred[:,0,0] + y_pred[0:,2,0])
     return K.mean(loss)
 
-def accuracy(y_true, y_pred):
-    return K.mean(y_pred[:,0,0] < y_pred[:,1,0] and y_pred[:,0,0] < y_pred[:,2,0])
+# def accuracy(y_true, y_pred):
+#     return K.mean(y_pred[:,0,0] < y_pred[:,1,0] and y_pred[:,0,0] < y_pred[:,2,0])
 
 
 
@@ -150,7 +149,7 @@ def main():
                                   callbacks=[checkpoint])
     model.save('last_epoch_model.h5')
 
-    # print("Training Accuracy: " + str(history.history['cosine_proximity'][-1]))
+    # print("Training Accuracy: " + str(histor y.history['cosine_proximity'][-1]))
     # print("Testing Accuracy: " + str(history.history['val_cosine_proximity'][-1]))
     #   # Visualize
     # plot_model(model, to_file='model.png')
