@@ -77,7 +77,7 @@ def model_gen():
 
     base_model = Model(input = [img_in,cap_in], output = inner)
     print(base_model.summary())
-    #plot_model(base_model, to_file='base_model.png', show_shapes = True, show_layer_names = True)
+    plot_model(base_model, to_file='base_model.png', show_shapes = True, show_layer_names = True)
     ########
 
     ########
@@ -100,7 +100,7 @@ def model_gen():
     #out = Add()([dense_up,dense_low])
 
     model = Model(input = [pos_img, pos_cap, neg_img, neg_cap], output = stacked)
-    #plot_model(model, to_file='model.png', show_shapes = True, show_layer_names = True)
+    plot_model(model, to_file='model.png', show_shapes = True, show_layer_names = True)
 
     model.compile(loss=triplet_loss,
                  optimizer = "adam",
@@ -140,7 +140,7 @@ def main():
 
     checkpoint = ModelCheckpoint("best_model.h5", monitor='loss', verbose=1,
         save_best_only=True, mode='auto', period=1)
-    history = model.fit_generator(generator = train_gen,
+    history = model.fit_generator(generator=train_gen,
                                   epochs=100,
                                   validation_data=val_gen,
                                   # use_multiprocessing = True,

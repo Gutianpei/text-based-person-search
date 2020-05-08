@@ -42,7 +42,7 @@ class DataGenerator(keras.utils.Sequence):
 
         # Generate data
         pos_img, pos_cap, neg_img, neg_cap = self.__data_generation(json_temp)
-        y =np.array([0]*self.batch_size).reshape(self.batch_size,1)
+        y =np.array([0]*self.batch_size*3).reshape(self.batch_size,3,1)
 
         return [pos_img, pos_cap, neg_img, neg_cap], y
 
