@@ -9,7 +9,52 @@ import time
 import tqdm
 from keras.models import Model
 from sklearn.metrics.pairwise import cosine_similarity
+import tensorflow as tf
+from keras import backend as K
+from numba import jit
 
+@jit(nopython=True)
+def compute_score(mat, ids):
+	rank1 = 0
+	rank5 = 0
+	rank10 = 0
+	rank20 = 0
+
+	idx = 0 # Keep track of true id
+	print()
+	print("Computing RankX")
+	for i in range(len(mat)):
+		idx_score = mat[i]
+		res_ids = ids[idx_score]
+
+		match = False
+		for i, res_id in enumerate(res_ids):
+			if res_id == ids[idx]:
+				match = True
+			if i == 0 and match:
+				rank1 += 1
+			if i == 9 and match:	# we have replicated image, so here i is 9
+				rank5 += 1
+			if i== 19 and match:
+				rank10 += 1
+			if i == 39:
+				if match > 0:
+					rank20 += 1
+				break
+		idx += 1
+
+		if i % 500 == 0:
+			print('progress:')
+			print(i/len(mat))
+
+	print("Rank1: ")
+	print(rank1/(idx+1))
+	print("Rank5: ")
+	print(rank5/(idx+1))
+	print("Rank10: ")
+	print(rank10/(idx+1))
+	print("Rank20: ")
+	print(rank20/(idx+1))
 
 def get_models(model):
 	img_input = model.layers[0].input
@@ -22,11 +67,15 @@ def get_models(model):
 
 	return img_model, cap_model
 
+def triplet_loss(y_true, y_pred):
+    margin = K.constant(0.2)
+    loss = K.maximum(K.constant(0),margin - y_pred[:,0,0] + y_pred[0:,1,0])+ K.maximum(K.constant(0),margin - y_pred[:,0,0] + y_pred[0:,2,0])
+    return K.mean(loss)
 
 word_model = KeyedVectors.load_word2vec_format('word_model.bin')
 ids, imgs, caps = get_test("caption_test.json", "../datasets/CUHK-PEDES", word_model)
 
-model = load_model("../default.h5").layers[4]
+model = load_model("../best_model.h5", custom_objects={'tf': tf, 'triplet_loss': triplet_loss, 'K': K}).layers[4]
 img_model, cap_model = get_models(model)	# get img path and cap path and resemble to new models
 
 print("data and model loaded")
@@ -35,39 +84,9 @@ print("Computing Distance")
 img_out = img_model.predict(imgs)
 cap_out = cap_model.predict(caps)
 mat = cosine_similarity(cap_out, img_out) #compute cosine, output shape(6248*6248) --> (cap, img)
+mat = np.array([np.argsort(score)[::-1] for score in mat])
+mat = mat.astype(np.int)
+ids = ids.astype(np.int)
 print("Matrix Ready")
 
-rank1 = 0
-rank5 = 0
-rank10 = 0
-rank20= 0
-
-idx = 0 # Keep track of true id
-print()
-print("Computing RankX")
-for score in tqdm.tqdm(mat):
-
-	idx_score = np.argsort(score)[::-1]
-	res_ids = ids[idx_score]
-	res_img = imgs[idx_score]	#predicted images True image: imgs[cap_id]
-
-	match = False
-	for i, res_id in enumerate(res_ids):
-		if res_id == ids[idx]:
-			match = True
-		if i == 0 and match:
-			rank1 += 1
-		if i == 9 and match:	# we have replicated image, so here i is 9
-			rank5 += 1
-		if i== 19 and match:
-			rank10 += 1
-		if i == 39:
-			if match > 0:
-				rank20 += 1
-			break
-	idx += 1
-
-print("Rank1: " + str(rank1/(idx+1)))
-print("Rank5: " + str(rank5/(idx+1)))
-print("Rank10: " + str(rank10/(idx+1)))
-print("Rank20: " + str(rank20/(idx+1)))
+compute_score(mat, ids)
