@@ -90,22 +90,31 @@ def model_gen():
     neg_s1 = base_model([neg_img, pos_cap])
     neg_s2  = base_model([pos_img, neg_cap])
 
-    up = Subtract()([neg_s1,pos_s])
-    low = Subtract()([neg_s2,pos_s])
+    stacked = Lambda(lambda vects: K.stack(vects, axis=1))([pos_s, neg_s1, neg_s2])
+    #up = Subtract()([neg_s1,pos_s])
+    #low = Subtract()([neg_s2,pos_s])
 
-    dense_up = Dense(1,activation = 'relu', trainable=False, bias_initializer = keras.initializers.Constant(0.2),kernel_initializer=keras.initializers.Ones())(up)
-    dense_low = Dense(1,activation = 'relu', trainable=False, bias_initializer = keras.initializers.Constant(0.2),kernel_initializer=keras.initializers.Ones())(low)
+    #dense_up = Dense(1,activation = 'relu', trainable=False, bias_initializer = keras.initializers.Constant(0.2),kernel_initializer=keras.initializers.Ones())(up)
+    #dense_low = Dense(1,activation = 'relu', trainable=False, bias_initializer = keras.initializers.Constant(0.2),kernel_initializer=keras.initializers.Ones())(low)
 
-    out = Add()([dense_up,dense_low])
+    #out = Add()([dense_up,dense_low])
 
-    model = Model(input = [pos_img, pos_cap, neg_img, neg_cap], output = out)
+    model = Model(input = [pos_img, pos_cap, neg_img, neg_cap], output = stacked)
     #plot_model(model, to_file='model.png', show_shapes = True, show_layer_names = True)
 
-    model.compile(loss="mean_squared_error",
+    model.compile(loss=triplet_loss,
                  optimizer = "adam",
                  metrics = ['mse'])
 
     return model
+
+def triplet_loss(y_true, y_pred):
+    margin = K.constant(0.2)
+    return K.maximum(K.constant(0),margin - y_pred[:,0,0] + y_pred[0:,1,0])
+        + K.maximum(K.constant(0),margin - y_pred[:,0,0] + y_pred[0:,2,0])
+
+
+
 
 def main():
     #
