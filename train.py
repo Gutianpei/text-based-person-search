@@ -104,7 +104,7 @@ def model_gen():
 
     model.compile(loss=triplet_loss,
                  optimizer = "adam",
-                 metrics = [accuracy])
+                 metrics = ["mse"])
 
     return model
 
@@ -114,8 +114,8 @@ def triplet_loss(y_true, y_pred):
         + K.maximum(K.constant(0),margin - y_pred[:,0,0] + y_pred[0:,2,0])
     return K.mean(loss)
 
-def accuracy(y_true, y_pred):
-    return K.mean(y_pred[:,0,0] < y_pred[:,1,0] and y_pred[:,0,0] < y_pred[:,2,0])
+#def accuracy(y_true, y_pred):
+    #return K.mean(y_pred[:,0,0] < y_pred[:,1,0] and y_pred[:,0,0] < y_pred[:,2,0])
 
 
 
