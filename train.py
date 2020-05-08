@@ -138,7 +138,7 @@ def main():
         model = model_gen()
     else:
         print('loading pretrained model')
-        model = load_model(load_network_path)
+        model = load_model(load_network_path, custom_objects={'tf': tf, 'triplet_loss': triplet_loss, 'K': K})
 
 
     checkpoint = ModelCheckpoint("../best_model.h5", monitor='loss', verbose=1,
