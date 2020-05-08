@@ -104,7 +104,7 @@ def model_gen():
 
     model.compile(loss=triplet_loss,
                  optimizer = "adam",
-                )
+                 metrics = ["mse"])
 
     return model
 
