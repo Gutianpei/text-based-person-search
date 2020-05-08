@@ -115,7 +115,7 @@ def triplet_loss(y_true, y_pred):
     return K.mean(loss)
 
 def accuracy(y_true, y_pred):
-    return K.mean(y_pred[:,0,0] < y_pred[:,1,0] and y_pred[:,0,0] < y_pred[:,1,0])
+    return K.mean(y_pred[:,0,0] < y_pred[:,1,0] and y_pred[:,0,0] < y_pred[:,2,0])
 
 
 
