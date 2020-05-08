@@ -4,7 +4,7 @@
 import numpy as np
 import tensorflow as tf
 from dataset import DataGenerator
-from keras.layers import Conv2D, MaxPooling2D, Concatenate,Flatten, Input, Dense, Dropout, InputLayer, LSTM, Bidirectional,Dot, Add, Subtract,BatchNormalization
+from keras.layers import Conv2D, MaxPooling2D, Concatenate,Flatten, Input, Dense, Dropout, InputLayer, LSTM, Bidirectional,Dot, Add, Subtract, Lambda
 from keras.applications.resnet50 import ResNet50
 from keras.models import Sequential, Model, load_model
 from keras import optimizers
@@ -64,16 +64,16 @@ def model_gen():
     # res_conv2 = Conv2D(512,(1,1),activation='relu')(res_conv)
     # res_pool = MaxPooling2D(pool_size = (3,3))(res_conv2)
     res_flat = Flatten()(res_in)  #shape: n*12*4*2048 -> n*(12*4*2048)
-    res_nn = Dense(1024, kernel_regularizer = regularizers.l2(0.),activation = 'linear')(res_flat)
+    res_nn = Dense(1024, activation = 'linear')(res_flat)
+    res_l2 = Lambda(lambda x: tf.math.l2_normalize(x, axis=1))(res_nn) # L2 normalize embeddings
 
     cap_in = Input(shape=(50,50))
     bi_lstm = Bidirectional(LSTM(20, return_sequences=True))(cap_in)
     cap_flat = Flatten()(bi_lstm)
-    cap_nn = Dense(1024,kernel_regularizer = regularizers.l2(0.),activation = 'linear')(cap_flat)
+    cap_nn = Dense(1024, activation = 'linear')(cap_flat)
+    cap_l2 = Lambda(lambda x: tf.math.l2_normalize(x, axis=1))(cap_nn) # L2 normalize embeddings
 
-    #BN here?
-
-    inner = Dot(axes=1, normalize=True)([res_nn, cap_nn])
+    inner = Dot(axes=1, normalize=True)([res_l2, cap_l2])
 
     base_model = Model(input = [img_in,cap_in], output = inner)
     print(base_model.summary())
