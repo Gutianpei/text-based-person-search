@@ -40,7 +40,7 @@ params = {'batch_size': 64,
           'width': IMG_WIDTH,
           'shuffle': True,
           'dataset_path': dpath,
-          'time_step': 50
+          'time_step': TIME_STEP
           }
 
 word_model = KeyedVectors.load_word2vec_format('word_model.bin')
