@@ -75,7 +75,7 @@ class DataGenerator(keras.utils.Sequence):
             tokens = [j.lower() for j in tokenizer.tokenize(caption)]
             #word_model = KeyedVectors.load_word2vec_format('word_model.bin')
             caps.append(np.array([self.word_model[i] for i in tokens]))
-        caps = sequence.pad_sequences(caps, maxlen=self.time_step, dtype='float', padding='post', truncating='post', value=0.0)
+        caps = sequence.pad_sequences(caps, maxlen=self.time_step, dtype='float', padding='pre', truncating='pre', value=0.0)
         #print(caps.shape)
         neg_img = np.roll(imgs, 12, axis=0)
         neg_cap = np.roll(caps, 12, axis=0)
