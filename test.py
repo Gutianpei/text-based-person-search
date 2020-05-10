@@ -12,6 +12,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import tensorflow as tf
 from keras import backend as K
 from numba import jit
+from triplet_loss import batch_hard_triplet_loss
 
 @jit(nopython=True)
 def compute_score(mat, ids):
@@ -53,26 +54,29 @@ def compute_score(mat, ids):
 	print(rank20/(idx+1))
 
 def get_models(model):
+	print(model.summary())
 	img_input = model.layers[0].input
 	img_output = model.layers[-3].output
 	img_model = Model(img_input, img_output)
 
-	cap_input = model.layers[1].input
+	cap_input = model.layers[3].input
 	cap_output = model.layers[-2].output
 	cap_model = Model(cap_input, cap_output)
 
 	return img_model, cap_model
 
 def triplet_loss(y_true, y_pred):
-    margin = K.constant(0.2)
-    loss = K.maximum(K.constant(0),margin - y_pred[:,0,0] + y_pred[0:,1,0])+ K.maximum(K.constant(0),margin - y_pred[:,0,0] + y_pred[0:,2,0])
-    return K.mean(loss)
+
+    label = y_true[:,0,0]
+
+    loss = batch_hard_triplet_loss(label, y_pred[:,1], y_pred[:,0], 0.2)
+    return loss
 
 word_model = KeyedVectors.load_word2vec_format('word_model.bin')
 TIME_STEP = 50
 ids, imgs, caps = get_test("caption_test.json", "../datasets/CUHK-PEDES", word_model, TIME_STEP)
 
-model = load_model("../best_model.h5", custom_objects={'tf': tf, 'triplet_loss': triplet_loss, 'K': K}).layers[4]
+model = load_model("../best_model.h5", custom_objects={'tf': tf, 'triplet_loss': triplet_loss, 'K': K})
 img_model, cap_model = get_models(model)	# get img path and cap path and resemble to new models
 
 print("data and model loaded")

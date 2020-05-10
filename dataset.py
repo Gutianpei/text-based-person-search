@@ -69,7 +69,10 @@ class DataGenerator(keras.utils.Sequence):
             image = image[:,:,::-1] #BGR to RGB
 
             imgs[i,] = image
-            ids[i,].fill(data["id"])
+
+            ids[i,]= np.full((2,1024),data["id"])
+
+
             # gen caps
             caption = data['captions']
             tokenizer = RegexpTokenizer(r'\w+')
@@ -78,9 +81,7 @@ class DataGenerator(keras.utils.Sequence):
             caps.append(np.array([self.word_model[i] for i in tokens]))
         caps = sequence.pad_sequences(caps, maxlen=self.time_step, dtype='float', padding='pre', truncating='pre', value=0.0)
         #print(caps.shape)
-        neg_img = np.roll(imgs, 12, axis=0)
-        neg_cap = np.roll(caps, 12, axis=0)
-        return imgs, caps, neg_img, neg_cap
+        return imgs, caps, ids
 # class dataset():
 #     def __init__(self, dataset_dir, new_height, new_width):
 #         self.dataset_dir = dataset_dir

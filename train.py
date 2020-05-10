@@ -36,7 +36,7 @@ batch_size = 128
 train_data = json.load(open(train_path))
 val_data = json.load(open(val_path))
 
-params = {'batch_size': 64,
+params = {'batch_size': 32,
           'height': IMG_HEIGHT,
           'width': IMG_WIDTH,
           'shuffle': True,
@@ -54,17 +54,18 @@ parser.add_argument('--model-path', type=str, required=False, default=None,
 
 def model_gen():
     ###### Resnet ########
-    resnet = ResNet50(include_top = False, weights = 'imagenet', input_shape=(IMG_HEIGHT,IMG_WIDTH,3))
+    img_in = Input(shape=(IMG_HEIGHT,IMG_WIDTH,3))
+    resnet = ResNet50(include_top = False, weights = 'imagenet', input_tensor=img_in)
     output = resnet.layers[-1].output
     #output = Dense(1024)
-    resnet = Model(resnet.input, output=output)
-    for layer in resnet.layers:
-        layer.trainable = False
+    #resnet = Model(resnet.input, output=output)
+    #for layer in resnet.layers:
+#        layer.trainable = False
 
     ##### Model #############
-    img_in = Input(shape=(IMG_HEIGHT,IMG_WIDTH,3))
-    res_in = resnet(img_in)
-    res_pool = MaxPooling2D(pool_size = (12,4))(res_in)
+
+    #res_in = resnet(img_in)
+    res_pool = MaxPooling2D(pool_size = (12,4))(output)
     res_conv = Conv2D(1024,(1,1),activation='relu')(res_pool)
     res_flat = Flatten()(res_conv)  #shape: n*12*4*2048 -> n*(12*4*2048)
     # res_conv2 = Conv2D(512,(1,1),activation='relu')(res_conv)
@@ -116,10 +117,10 @@ def model_gen():
     return base_model
 
 def triplet_loss(y_true, y_pred):
-    print(y_pred.shape)
-    print(y_pred[:,1].shape)
-    print(y_pred[:,0].shape)
-    loss = batch_hard_triplet_loss(y_true, y_pred[:,1], y_pred[:,0], 0.2)
+
+    label = y_true[:,0,0]
+
+    loss = batch_hard_triplet_loss(label, y_pred[:,1], y_pred[:,0], 0.2)
     return loss
 
 # def accuracy(y_true, y_pred):
@@ -131,12 +132,10 @@ def triplet_loss(y_true, y_pred):
 def main():
     #
     # GPU config
-    # config = tf.compat.v1.ConfigProto( device_count = {'GPU': 1 , 'CPU': 4} )
-    # sess = tf.compat.v1.Session()
-    # keras.backend.set_session(sess)
-    model = model_gen()
-    print(model.summary())
-    exit()
+    config = tf.compat.v1.ConfigProto( device_count = {'GPU': 1 , 'CPU': 4} )
+    sess = tf.compat.v1.Session()
+    keras.backend.set_session(sess)
+
     global args
     args = parser.parse_args()
     load_network_path = args.model_path
