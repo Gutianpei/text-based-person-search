@@ -22,6 +22,7 @@ import json
 from keras.optimizers import Adam
 from keras import regularizers
 import argparse
+from triplet_loss import batch_hard_triplet_loss
 
 # load images and captions
 dpath = "../datasets/CUHK-PEDES/"
@@ -63,37 +64,39 @@ def model_gen():
     ##### Model #############
     img_in = Input(shape=(IMG_HEIGHT,IMG_WIDTH,3))
     res_in = resnet(img_in)
-    # res_conv = Conv2D(512,(1,1),activation='relu')(res_in)
+    res_pool = MaxPooling2D(pool_size = (12,4))(res_in)
+    res_conv = Conv2D(1024,(1,1),activation='relu')(res_pool)
     # res_conv2 = Conv2D(512,(1,1),activation='relu')(res_conv)
     # res_pool = MaxPooling2D(pool_size = (3,3))(res_conv2)
-    res_flat = Flatten()(res_in)  #shape: n*12*4*2048 -> n*(12*4*2048)
-    res_nn = Dense(1024, activation = 'linear')(res_flat)
-    res_l2 = Lambda(lambda x: tf.math.l2_normalize(x, axis=1))(res_nn) # L2 normalize embeddings
+    # res_flat = Flatten()(res_in)  #shape: n*12*4*2048 -> n*(12*4*2048)
+    # res_nn = Dense(1024, activation = 'linear')(res_flat)
+    # res_l2 = Lambda(lambda x: tf.math.l2_normalize(x, axis=1))(res_nn) # L2 normalize embeddings
 
     cap_in = Input(shape=(TIME_STEP,EMBEDDING_SIZE))
-    bi_lstm = Bidirectional(LSTM(20, return_sequences=True))(cap_in)
-    cap_flat = Flatten()(bi_lstm)
-    cap_nn = Dense(1024, activation = 'linear')(cap_flat)
-    cap_l2 = Lambda(lambda x: tf.math.l2_normalize(x, axis=1))(cap_nn) # L2 normalize embeddings
+    bi_lstm = Bidirectional(LSTM(512, return_sequences=True))(cap_in)
+    cap_max = Lambda(lambda x: tf.reduce_max(output, axis=1, name='mean_states'))(bi_lstm)
+    # cap_flat = Flatten()(bi_lstm)
+    # cap_nn = Dense(1024, activation = 'linear')(cap_flat)
+    # cap_l2 = Lambda(lambda x: tf.math.l2_normalize(x, axis=1))(cap_nn) # L2 normalize embeddings
 
-    inner = Dot(axes=1, normalize=True)([res_l2, cap_l2])
+    # inner = Dot(axes=1, normalize=True)([res_l2, cap_l2])
 
-    base_model = Model(input = [img_in,cap_in], output = inner)
+    base_model = Model(input = [img_in,cap_in], output = (res_conv,cap_l2))
     # print(base_model.summary())
     # plot_model(base_model, to_file='base_model.png', show_shapes = True, show_layer_names = True)
     ########
 
     ########
-    pos_img = Input(shape = (IMG_HEIGHT,IMG_WIDTH,3))
-    pos_cap = Input(shape=(TIME_STEP,EMBEDDING_SIZE))
-    neg_img = Input(shape = (IMG_HEIGHT,IMG_WIDTH,3))
-    neg_cap = Input(shape=(TIME_STEP,EMBEDDING_SIZE))
-
-    pos_s = base_model([pos_img, pos_cap])
-    neg_s1 = base_model([neg_img, pos_cap])
-    neg_s2  = base_model([pos_img, neg_cap])
-
-    stacked = Lambda(lambda vects: K.stack(vects, axis=1))([pos_s, neg_s1, neg_s2])
+    # pos_img = Input(shape = (IMG_HEIGHT,IMG_WIDTH,3))
+    # pos_cap = Input(shape=(TIME_STEP,EMBEDDING_SIZE))
+    # neg_img = Input(shape = (IMG_HEIGHT,IMG_WIDTH,3))
+    # neg_cap = Input(shape=(TIME_STEP,EMBEDDING_SIZE))
+    #
+    # pos_s = base_model([pos_img, pos_cap])
+    # neg_s1 = base_model([neg_img, pos_cap])
+    # neg_s2  = base_model([pos_img, neg_cap])
+    #
+    # stacked = Lambda(lambda vects: K.stack(vects, axis=1))([pos_s, neg_s1, neg_s2])
     #up = Subtract()([neg_s1,pos_s])
     #low = Subtract()([neg_s2,pos_s])
 
@@ -102,7 +105,7 @@ def model_gen():
 
     #out = Add()([dense_up,dense_low])
 
-    model = Model(input = [pos_img, pos_cap, neg_img, neg_cap], output = stacked)
+    # model = Model(input = [pos_img, pos_cap, neg_img, neg_cap], output = stacked)
     # plot_model(model, to_file='model.png', show_shapes = True, show_layer_names = True)
 
     model.compile(loss=triplet_loss,
@@ -112,9 +115,8 @@ def model_gen():
     return model
 
 def triplet_loss(y_true, y_pred):
-    margin = K.constant(0.2)
-    loss = K.maximum(K.constant(0),margin - y_pred[:,0,0] + y_pred[0:,1,0])+ K.maximum(K.constant(0),margin - y_pred[:,0,0] + y_pred[0:,2,0])
-    return K.mean(loss)
+    loss = batch_hard_triplet_loss(y_true, y_pred[1], y_pred[0], 0.2)
+    return loss
 
 # def accuracy(y_true, y_pred):
 #     return K.mean(y_pred[:,0,0] < y_pred[:,1,0] and y_pred[:,0,0] < y_pred[:,2,0])
