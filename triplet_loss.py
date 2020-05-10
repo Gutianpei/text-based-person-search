@@ -42,7 +42,7 @@ def _pairwise_distances(text_embeddings, image_embeddings, squared=False):
     if not squared:
         # Because the gradient of sqrt is infinite when distances == 0.0 (ex: on the diagonal)
         # we need to add a small epsilon where distances == 0.0
-        mask = tf.to_float(tf.equal(distances, 0.0))
+        mask = tf.cast(tf.equal(distances, 0.0),tf.float32)
         distances = distances + mask * 1e-16
 
         distances = tf.sqrt(distances)
@@ -152,14 +152,14 @@ def batch_all_triplet_loss(labels, text_embeddings, image_embeddings, margin,  s
     # Put to zero the invalid triplets
     # (where label(a) != label(p) or label(n) == label(a) or a == p)
     mask = _get_triplet_mask(labels)
-    mask = tf.to_float(mask)
+    mask = tf.cast(mask,tf.float32)
     triplet_loss = tf.multiply(mask, triplet_loss)
 
     # Remove negative losses (i.e. the easy triplets)
     triplet_loss = tf.maximum(triplet_loss, 0.0)
 
     # Count number of positive triplets (where triplet_loss > 0)
-    valid_triplets = tf.to_float(tf.greater(triplet_loss, 1e-16))
+    valid_triplets = tf.cast(tf.greater(triplet_loss, 1e-16),tf.float32)
     num_positive_triplets = tf.reduce_sum(valid_triplets)
     num_valid_triplets = tf.reduce_sum(mask)
     fraction_positive_triplets = num_positive_triplets / (num_valid_triplets + 1e-16)
@@ -182,15 +182,15 @@ def batch_hard_triplet_loss(labels, text_embeddings, image_embeddings, margin, s
     Returns:
         triplet_loss: scalar tensor containing the triplet loss
     """
-    image_embeddings = tf.nn.l2_normalize(image_embeddings, dim=-1)
-    text_embeddings = tf.nn.l2_normalize(text_embeddings, dim=-1)
+    image_embeddings = tf.nn.l2_normalize(image_embeddings, axis=-1)
+    text_embeddings = tf.nn.l2_normalize(text_embeddings, axis=-1)
     # Get the pairwise distance matrix
     pairwise_dist = _pairwise_distances(text_embeddings, image_embeddings, squared=squared)
 
     # For each anchor, get the hardest positive
     # First, we need to get a mask for every valid positive (they should have same label)
     mask_anchor_positive = _get_anchor_positive_triplet_mask(labels)
-    mask_anchor_positive = tf.to_float(mask_anchor_positive)
+    mask_anchor_positive = tf.cast(mask_anchor_positive,tf.float32)
 
     # We put to 0 any element where (a, p) is not valid (valid if a != p and label(a) == label(p))
     anchor_positive_dist = tf.multiply(mask_anchor_positive, pairwise_dist)
@@ -202,7 +202,7 @@ def batch_hard_triplet_loss(labels, text_embeddings, image_embeddings, margin, s
     # For each anchor, get the hardest negative
     # First, we need to get a mask for every valid negative (they should have different labels)
     mask_anchor_negative = _get_anchor_negative_triplet_mask(labels)
-    mask_anchor_negative = tf.to_float(mask_anchor_negative)
+    mask_anchor_negative = tf.cast(mask_anchor_negative,tf.float32)
 
     # We add the maximum value in each row to the invalid negatives (label(a) == label(n))
     max_anchor_negative_dist = tf.reduce_max(pairwise_dist, axis=1, keepdims=True)

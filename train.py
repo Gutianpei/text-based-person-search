@@ -66,6 +66,7 @@ def model_gen():
     res_in = resnet(img_in)
     res_pool = MaxPooling2D(pool_size = (12,4))(res_in)
     res_conv = Conv2D(1024,(1,1),activation='relu')(res_pool)
+    res_flat = Flatten()(res_conv)  #shape: n*12*4*2048 -> n*(12*4*2048)
     # res_conv2 = Conv2D(512,(1,1),activation='relu')(res_conv)
     # res_pool = MaxPooling2D(pool_size = (3,3))(res_conv2)
     # res_flat = Flatten()(res_in)  #shape: n*12*4*2048 -> n*(12*4*2048)
@@ -74,15 +75,15 @@ def model_gen():
 
     cap_in = Input(shape=(TIME_STEP,EMBEDDING_SIZE))
     bi_lstm = Bidirectional(LSTM(512, return_sequences=True))(cap_in)
-    cap_max = Lambda(lambda x: tf.reduce_max(output, axis=1, name='mean_states'))(bi_lstm)
+    cap_max = Lambda(lambda x: tf.reduce_max(x, axis=1, name='mean_states'))(bi_lstm)
     # cap_flat = Flatten()(bi_lstm)
     # cap_nn = Dense(1024, activation = 'linear')(cap_flat)
     # cap_l2 = Lambda(lambda x: tf.math.l2_normalize(x, axis=1))(cap_nn) # L2 normalize embeddings
 
     # inner = Dot(axes=1, normalize=True)([res_l2, cap_l2])
-
-    base_model = Model(input = [img_in,cap_in], output = (res_conv,cap_l2))
-    # print(base_model.summary())
+    stacked = Lambda(lambda vects: K.stack(vects, axis=1))([res_flat, cap_max])
+    base_model = Model(input = [img_in,cap_in], output = stacked)
+    print(base_model.summary())
     # plot_model(base_model, to_file='base_model.png', show_shapes = True, show_layer_names = True)
     ########
 
@@ -108,14 +109,17 @@ def model_gen():
     # model = Model(input = [pos_img, pos_cap, neg_img, neg_cap], output = stacked)
     # plot_model(model, to_file='model.png', show_shapes = True, show_layer_names = True)
 
-    model.compile(loss=triplet_loss,
+    base_model.compile(loss=triplet_loss,
                  optimizer = "adam",
                  metrics = ["mse"])
 
-    return model
+    return base_model
 
 def triplet_loss(y_true, y_pred):
-    loss = batch_hard_triplet_loss(y_true, y_pred[1], y_pred[0], 0.2)
+    print(y_pred.shape)
+    print(y_pred[:,1].shape)
+    print(y_pred[:,0].shape)
+    loss = batch_hard_triplet_loss(y_true, y_pred[:,1], y_pred[:,0], 0.2)
     return loss
 
 # def accuracy(y_true, y_pred):
@@ -130,7 +134,9 @@ def main():
     # config = tf.compat.v1.ConfigProto( device_count = {'GPU': 1 , 'CPU': 4} )
     # sess = tf.compat.v1.Session()
     # keras.backend.set_session(sess)
-
+    model = model_gen()
+    print(model.summary())
+    exit()
     global args
     args = parser.parse_args()
     load_network_path = args.model_path

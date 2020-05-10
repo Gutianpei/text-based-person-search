@@ -42,10 +42,10 @@ class DataGenerator(keras.utils.Sequence):
         json_temp = [self.json_data[k] for k in indexes]
 
         # Generate data
-        pos_img, pos_cap, neg_img, neg_cap = self.__data_generation(json_temp)
-        y =np.array([0]*self.batch_size*3).reshape(self.batch_size,3,1)
+        pos_img, pos_cap, ids = self.__data_generation(json_temp)
+        y = ids
 
-        return [pos_img, pos_cap, neg_img, neg_cap], y
+        return [pos_img, pos_cap], y
 
     def on_epoch_end(self):
         'Updates indexes after each epoch'
@@ -58,6 +58,7 @@ class DataGenerator(keras.utils.Sequence):
         # Initialization
         imgs = np.empty((self.batch_size, self.height, self.width, 3))
         caps = []
+        ids = np.empty((self.batch_size, 2, 1024))
         #X = np.empty((self.batch_size, *self.dim, self.n_channels))
 
         # Generate data
@@ -68,7 +69,7 @@ class DataGenerator(keras.utils.Sequence):
             image = image[:,:,::-1] #BGR to RGB
 
             imgs[i,] = image
-
+            ids[i,].fill(data["id"])
             # gen caps
             caption = data['captions']
             tokenizer = RegexpTokenizer(r'\w+')
