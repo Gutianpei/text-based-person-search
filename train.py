@@ -66,7 +66,7 @@ def model_gen():
 
     #res_in = resnet(img_in)
     res_pool = MaxPooling2D(pool_size = (12,4))(output)
-    res_conv = Conv2D(1024,(1,1),activation='relu')(res_pool)
+    res_conv = Conv2D(1024,(1,1),activation='linear')(res_pool)
     res_flat = Flatten()(res_conv)  #shape: n*12*4*2048 -> n*(12*4*2048)
     # res_conv2 = Conv2D(512,(1,1),activation='relu')(res_conv)
     # res_pool = MaxPooling2D(pool_size = (3,3))(res_conv2)
@@ -111,8 +111,8 @@ def model_gen():
     # plot_model(model, to_file='model.png', show_shapes = True, show_layer_names = True)
 
     base_model.compile(loss=triplet_loss,
-                 optimizer = "adam",
-                 metrics = ["mse"])
+                 optimizer = "adam")
+                 #metrics = ["mse"])
 
     return base_model
 

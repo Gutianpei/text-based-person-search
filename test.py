@@ -55,14 +55,18 @@ def compute_score(mat, ids):
 
 def get_models(model):
 	print(model.summary())
+	print("Image Weights: ")
 	img_input = model.layers[0].input
 	img_output = model.layers[-3].output
 	img_model = Model(img_input, img_output)
+	print(img_model.get_weights())
 
-	cap_input = model.layers[3].input
+	print("Caption Weights: ")
+	cap_input = model.layers[-6].input
 	cap_output = model.layers[-2].output
 	cap_model = Model(cap_input, cap_output)
-
+	print(cap_model.get_weights())
+	exit()
 	return img_model, cap_model
 
 def triplet_loss(y_true, y_pred):
@@ -77,6 +81,7 @@ TIME_STEP = 50
 ids, imgs, caps = get_test("caption_test.json", "../datasets/CUHK-PEDES", word_model, TIME_STEP)
 
 model = load_model("../best_model.h5", custom_objects={'tf': tf, 'triplet_loss': triplet_loss, 'K': K})
+
 img_model, cap_model = get_models(model)	# get img path and cap path and resemble to new models
 
 print("data and model loaded")
