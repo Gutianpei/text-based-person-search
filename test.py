@@ -1,5 +1,7 @@
 '''Script for testing
 '''
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from keras.models import load_model
 import numpy as np
 from testing_data import get_test
@@ -55,7 +57,7 @@ def compute_score(mat, ids):
 
 def get_models(model):
 	print(model.summary())
-	
+
 	print("Image Weights: ")
 	img_input = model.layers[0].input
 	img_output = model.layers[-3].output
