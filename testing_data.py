@@ -5,55 +5,84 @@ import cv2
 import numpy as np
 from nltk.tokenize import RegexpTokenizer
 from keras.preprocessing import sequence
+from collections import Counter
 
-def Diff(li1, li2):
-    return (list(set(li1) - set(li2)))
-#
-random.seed(5)
+def data_gen():
+    ids = {}
+    js_data = json.load(open("caption_train.json"))
 
-ids = [i for i in range(1,13004)]
-# #print(len(ids))
-test = random.sample(ids, k = 1000)
-# #print(len(test))
-train_val = Diff(ids, test)
-# #print(len(train_val))
-#
-val = random.sample(train_val, k = 1000)
-train = Diff(train_val, val)
-# #print(len(train))
-#
-# #print(Diff(train+val+test,ids))
-# #exit()
-test_data = []
-train_data = []
-val_data = []
-js_data = json.load(open("../datasets/CUHK-PEDES/caption_all.json"))
+    for data in js_data:
+        id = data["id"]
+        #print(id)
+        if id not in ids:
+            ids[id] = [copy.deepcopy(data)]
+        else:
+            ids[id].append(copy.deepcopy(data))
 
-for data in js_data:
-    if len(data["captions"]) == 2:
-#
-        for cap in data["captions"]:
+    balanced_train = []
 
-            d_new = copy.deepcopy(data)
-            d_new["captions"] = cap
+    for id in ids:
+        r = min(len(ids[id]),4)
+        if r!=4:
+            print(r)
+        for i in range(r):
+            balanced_train.append(copy.deepcopy(ids[id][i]))
 
-            if d_new["id"] in test:
-                test_data.append(d_new)
-            elif d_new["id"] in val:
-                val_data.append(d_new)
+    print(len(balanced_train))
 
-            else:
-                train_data.append(d_new)
+    with open('caption_train_balanced.json', 'w') as outfile:
+          json.dump(balanced_train, outfile)
+    def Diff(li1, li2):
+        return (list(set(li1) - set(li2)))
+    #
+    random.seed(5)
 
-#
-with open('caption_test.json', 'w') as outfile:
-     json.dump(test_data, outfile)
-#
-with open('caption_train.json', 'w') as outfile:
-     json.dump(train_data, outfile)
-#
-with open('caption_val.json', 'w') as outfile:
-     json.dump(val_data, outfile)
+    ids = [i for i in range(1,13004)]
+    # #print(len(ids))
+    test = random.sample(ids, k = 1000)
+    # #print(len(test))
+    train_val = Diff(ids, test)
+    # #print(len(train_val))
+    #
+    val = random.sample(train_val, k = 1000)
+    train = Diff(train_val, val)
+    # #print(len(train))
+    #
+    # #print(Diff(train+val+test,ids))
+    # #exit()
+    test_data = []
+    train_data = []
+    val_data = []
+
+
+
+
+
+    for data in js_data:
+        if len(data["captions"]) == 2:
+    #
+            for cap in data["captions"]:
+
+                d_new = copy.deepcopy(data)
+                d_new["captions"] = cap
+
+                if d_new["id"] in test:
+                    test_data.append(d_new)
+                elif d_new["id"] in val:
+                    val_data.append(d_new)
+
+                else:
+                    train_data.append(d_new)
+
+    #
+    with open('caption_test.json', 'w') as outfile:
+         json.dump(test_data, outfile)
+    #
+    with open('caption_train.json', 'w') as outfile:
+         json.dump(train_data, outfile)
+    #
+    with open('caption_val.json', 'w') as outfile:
+         json.dump(val_data, outfile)
 
 def get_test(json_path, dataset_path, word_model, time_step):
     ''' Read from caption_test.json

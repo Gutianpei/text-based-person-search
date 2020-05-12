@@ -4,7 +4,7 @@
 import numpy as np
 import tensorflow as tf
 from dataset import DataGenerator
-from keras.layers import Conv2D, MaxPooling2D, Concatenate,Flatten, Input, Dense, Dropout, InputLayer, LSTM, Bidirectional,Dot, Add, Subtract, Lambda
+from keras.layers import Conv2D, MaxPooling2D, Concatenate,Flatten, Input, Dense, Dropout, InputLayer, LSTM, Bidirectional,Dot, Add, Subtract, Lambda, BatchNormalization
 from keras.applications.resnet50 import ResNet50
 from keras.models import Sequential, Model, load_model
 from keras import optimizers
@@ -22,11 +22,11 @@ import json
 from keras.optimizers import Adam
 from keras import regularizers
 import argparse
-from triplet_loss import batch_hard_triplet_loss
+from triplet_loss import batch_hard_triplet_loss,batch_semi_triplet_loss
 
 # load images and captions
 dpath = "../datasets/CUHK-PEDES/"
-train_path = "caption_train.json"
+train_path = "caption_train_balanced.json"
 val_path = "caption_val.json"
 IMG_HEIGHT = 384
 IMG_WIDTH = 128
@@ -39,7 +39,7 @@ val_data = json.load(open(val_path))
 params = {'batch_size': 32,
           'height': IMG_HEIGHT,
           'width': IMG_WIDTH,
-          'shuffle': True,
+          'shuffle': False,
           'dataset_path': dpath,
           'time_step': TIME_STEP
           }
@@ -66,8 +66,10 @@ def model_gen():
 
     #res_in = resnet(img_in)
     res_pool = MaxPooling2D(pool_size = (12,4))(output)
-    res_conv = Conv2D(1024,(1,1),activation='linear')(res_pool)
-    res_flat = Flatten()(res_conv)  #shape: n*12*4*2048 -> n*(12*4*2048)
+    res_conv = Conv2D(1024,(1,1),activation='relu')(res_pool)
+    res_bn = BatchNormalization()(res_conv)
+    res_flat = Flatten()(res_bn)  #shape: n*12*4*2048 -> n*(12*4*2048)
+    #res_nn = Dense(1024, activation = 'linear')(res_flat)
     # res_conv2 = Conv2D(512,(1,1),activation='relu')(res_conv)
     # res_pool = MaxPooling2D(pool_size = (3,3))(res_conv2)
     # res_flat = Flatten()(res_in)  #shape: n*12*4*2048 -> n*(12*4*2048)
@@ -77,6 +79,7 @@ def model_gen():
     cap_in = Input(shape=(TIME_STEP,EMBEDDING_SIZE))
     bi_lstm = Bidirectional(LSTM(512, return_sequences=True))(cap_in)
     cap_max = Lambda(lambda x: tf.reduce_max(x, axis=1, name='mean_states'))(bi_lstm)
+    #cap_nn = Dense(1024,activation='linear')(cap_max)
     # cap_flat = Flatten()(bi_lstm)
     # cap_nn = Dense(1024, activation = 'linear')(cap_flat)
     # cap_l2 = Lambda(lambda x: tf.math.l2_normalize(x, axis=1))(cap_nn) # L2 normalize embeddings
@@ -120,7 +123,7 @@ def triplet_loss(y_true, y_pred):
 
     label = y_true[:,0,0]
 
-    loss = batch_hard_triplet_loss(label, y_pred[:,1], y_pred[:,0], 0.2)
+    loss = batch_semi_triplet_loss(label,y_pred[:,1], y_pred[:,0], 0.2)
     return loss
 
 # def accuracy(y_true, y_pred):
@@ -132,9 +135,9 @@ def triplet_loss(y_true, y_pred):
 def main():
     #
     # GPU config
-    config = tf.compat.v1.ConfigProto( device_count = {'GPU': 1 , 'CPU': 4} )
-    sess = tf.compat.v1.Session()
-    keras.backend.set_session(sess)
+    # config = tf.compat.v1.ConfigProto( device_count = {'GPU': 1 , 'CPU': 4} )
+    # sess = tf.compat.v1.Session()
+    # keras.backend.set_session(sess)
 
     global args
     args = parser.parse_args()

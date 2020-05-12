@@ -55,18 +55,16 @@ def compute_score(mat, ids):
 
 def get_models(model):
 	print(model.summary())
+	
 	print("Image Weights: ")
 	img_input = model.layers[0].input
 	img_output = model.layers[-3].output
 	img_model = Model(img_input, img_output)
-	print(img_model.get_weights())
 
 	print("Caption Weights: ")
 	cap_input = model.layers[-6].input
 	cap_output = model.layers[-2].output
 	cap_model = Model(cap_input, cap_output)
-	print(cap_model.get_weights())
-	exit()
 	return img_model, cap_model
 
 def triplet_loss(y_true, y_pred):
