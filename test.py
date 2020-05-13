@@ -9,6 +9,7 @@ from collections import Counter
 from gensim.models import KeyedVectors
 import time
 import tqdm
+import keras_contrib
 from keras.models import Model
 from sklearn.metrics.pairwise import cosine_similarity
 import tensorflow as tf
@@ -29,6 +30,7 @@ def compute_score(mat, ids):
 	for i in range(len(mat)):
 		idx_score = mat[i]
 		res_ids = ids[idx_score]
+		print(res_ids[:20])
 
 		match = False
 		for i, res_id in enumerate(res_ids):
@@ -71,7 +73,7 @@ def get_models(model):
 
 def triplet_loss(y_true, y_pred):
 
-    label = y_true[:,0,0]
+    label = K.flatten(y_true[:,0,0])
 
     loss = batch_hard_triplet_loss(label, y_pred[:,1], y_pred[:,0], 0.2)
     return loss
@@ -80,7 +82,7 @@ word_model = KeyedVectors.load_word2vec_format('word_model.bin')
 TIME_STEP = 50
 ids, imgs, caps = get_test("caption_test.json", "../datasets/CUHK-PEDES", word_model, TIME_STEP)
 
-model = load_model("../best_model.h5", custom_objects={'tf': tf, 'triplet_loss': triplet_loss, 'K': K})
+model = load_model("../best_model.h5", custom_objects={'tf': tf, 'triplet_loss': triplet_loss, 'K': K, 'InstanceNormalization':keras_contrib.layers.InstanceNormalization})
 
 img_model, cap_model = get_models(model)	# get img path and cap path and resemble to new models
 

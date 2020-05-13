@@ -6,13 +6,14 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import numpy as np
 import tensorflow as tf
 from dataset import DataGenerator
-from keras.layers import Conv2D, MaxPooling2D, Concatenate,Flatten, Input, Dense, Dropout, InputLayer, LSTM, Bidirectional,Dot, Add, Subtract, Lambda, BatchNormalization
+from keras.layers import Conv2D, MaxPooling2D, Concatenate,Flatten, Input, Dense, Dropout, InputLayer, LSTM, Bidirectional,Dot, Add, Subtract, Lambda, BatchNormalization, Activation
+from keras_contrib.layers.normalization.instancenormalization import InstanceNormalization
 from keras.applications.resnet50 import ResNet50
 from keras.models import Sequential, Model, load_model
 from keras import optimizers
 from keras.utils import plot_model
 from keras.callbacks import ModelCheckpoint
-# from resnet50 import run_resnet50
+
 from keras.utils import plot_model
 from gensim.models import KeyedVectors
 import keras
@@ -24,7 +25,7 @@ import json
 from keras.optimizers import Adam
 from keras import regularizers
 import argparse
-from triplet_loss import batch_hard_triplet_loss,batch_semi_triplet_loss
+from triplet_loss import batch_hard_triplet_loss,batch_semi_triplet_loss,batch_all_triplet_loss
 
 # load images and captions
 dpath = "../datasets/CUHK-PEDES/"
@@ -34,11 +35,11 @@ IMG_HEIGHT = 384
 IMG_WIDTH = 128
 TIME_STEP = 50
 EMBEDDING_SIZE = 50
-batch_size = 128
+batch_size = 32
 train_data = json.load(open(train_path))
 val_data = json.load(open(val_path))
 
-params = {'batch_size': 32,
+params = {'batch_size': batch_size,
           'height': IMG_HEIGHT,
           'width': IMG_WIDTH,
           'shuffle': False,
@@ -67,7 +68,8 @@ def model_gen():
     ##### Model #############
 
     #res_in = resnet(img_in)
-    res_pool = MaxPooling2D(pool_size = (12,4))(output)
+    res_in = InstanceNormalization()(output)
+    res_pool = MaxPooling2D(pool_size = (12,4))(res_in)
     res_conv = Conv2D(1024,(1,1),activation='relu')(res_pool)
     res_bn = BatchNormalization()(res_conv)
     res_flat = Flatten()(res_bn)  #shape: n*12*4*2048 -> n*(12*4*2048)
@@ -88,6 +90,8 @@ def model_gen():
 
     # inner = Dot(axes=1, normalize=True)([res_l2, cap_l2])
     stacked = Lambda(lambda vects: K.stack(vects, axis=1))([res_flat, cap_max])
+    #mrg = Concatenate()([res_flat, cap_max])
+    #softmax =Dense(13001, activation='softmax')(mrg)
     base_model = Model(input = [img_in,cap_in], output = stacked)
     print(base_model.summary())
     # plot_model(base_model, to_file='base_model.png', show_shapes = True, show_layer_names = True)
@@ -114,19 +118,20 @@ def model_gen():
 
     # model = Model(input = [pos_img, pos_cap, neg_img, neg_cap], output = stacked)
     # plot_model(model, to_file='model.png', show_shapes = True, show_layer_names = True)
-
+    #loss_fn = keras.losses.SparseCategoricalCrossentropy()
     base_model.compile(loss=triplet_loss,
-                 optimizer = "adam")
-                 #metrics = ["mse"])
+                 optimizer = Adam(0.0001))
 
     return base_model
 
 def triplet_loss(y_true, y_pred):
-
-    label = y_true[:,0,0]
-
-    loss = batch_semi_triplet_loss(label,y_pred[:,1], y_pred[:,0], 0.2)
-    return loss
+    #one_hot_label = keras.utils.to_categorical(y_true[:,0,0], num_classes = 10988)
+    # softmax_ce = tf.nn.softmax_cross_entropy_with_logits(labels=one_hot_label, logits=y_pred)
+    label = K.flatten(y_true[:,0,0])
+    # softmax = tf.reduce_mean(softmax_ce)
+    triplet_loss, fraction_positive_triplets,mask = batch_all_triplet_loss(label,y_pred[:,1], y_pred[:,0], 0.2)
+    print(fraction_positive_triplets)
+    return triplet_loss
 
 # def accuracy(y_true, y_pred):
 #     return K.mean(y_pred[:,0,0] < y_pred[:,1,0] and y_pred[:,0,0] < y_pred[:,2,0])

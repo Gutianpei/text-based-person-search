@@ -62,8 +62,8 @@ def _get_anchor_positive_triplet_mask(labels):
         mask: tf.bool `Tensor` with shape [batch_size, batch_size]
     """
     # Check that i and j are distinct
-    # indices_equal = tf.cast(tf.eye(tf.shape(labels)[0]), tf.bool)
-    # indices_not_equal = tf.logical_not(indices_equal)
+    #indices_equal = tf.cast(tf.eye(tf.shape(labels)[0]), tf.bool)
+    #indices_not_equal = tf.logical_not(indices_equal)
 
     # Check if labels[i] == labels[j]
     # Uses broadcasting where the 1st argument has shape (1, batch_size) and the 2nd (batch_size, 1)
@@ -73,7 +73,7 @@ def _get_anchor_positive_triplet_mask(labels):
     #mask = tf.logical_and(indices_not_equal, labels_equal)
 
     return labels_equal
-
+    #return mask
 
 def _get_anchor_negative_triplet_mask(labels):
     """Return a 2D mask where mask[a, n] is True iff a and n have distinct labels.
@@ -214,10 +214,11 @@ def batch_semi_triplet_loss(labels, text_embeddings, image_embeddings, margin, s
     anchor_negative_dist = pairwise_dist + max_anchor_negative_dist * (1.0 - mask_anchor_negative)
 
     # shape (batch_size,)
-    neg_ge_pos = anchor_negative_dist > anchor_positive_dist
-    margin_cond = (anchor_negative_dist - anchor_positive_dist) < margin
+    neg_ge_pos = tf.greater(anchor_negative_dist, anchor_positive_dist)
+    margin_cond = tf.greater(margin,(anchor_negative_dist - anchor_positive_dist))
     cond = tf.cast(tf.logical_and(neg_ge_pos,margin_cond), tf.float32)
-    update_neg = anchor_negative_dist * cond
+    update_neg = tf.multiply(anchor_negative_dist, cond)
+
     semi_negative_dist = tf.reduce_sum(update_neg, axis=1, keepdims=True)
     tf.summary.scalar("semi_negative_dist", tf.reduce_mean(semi_negative_dist))
 
@@ -243,9 +244,9 @@ def batch_hard_triplet_loss(labels, text_embeddings, image_embeddings, margin, s
     Returns:
         triplet_loss: scalar tensor containing the triplet loss
     """
-    labels = tf.cast(labels, dtype='int32')
-    image_embeddings = tf.nn.l2_normalize(image_embeddings, axis=-1)
-    text_embeddings = tf.nn.l2_normalize(text_embeddings, axis=-1)
+    #labels = tf.cast(labels, dtype='int32')
+    #image_embeddings = tf.nn.l2_normalize(image_embeddings, axis=-1)
+    #text_embeddings = tf.nn.l2_normalize(text_embeddings, axis=-1)
     # Get the pairwise distance matrix
     pairwise_dist = _pairwise_distances(text_embeddings, image_embeddings, squared=squared)
 
@@ -279,6 +280,6 @@ def batch_hard_triplet_loss(labels, text_embeddings, image_embeddings, margin, s
     #triplet_loss = tf.reduce_sum(tf.reduce_max(triplet_loss,0))+tf.reduce_sum(tf.reduce_max(triplet_loss,1))
 
     # Get final mean triplet loss
-    triplet_loss = tf.reduce_sum(triplet_loss)
+    triplet_loss = tf.reduce_mean(triplet_loss)
 
     return triplet_loss#,pairwise_dist,hardest_positive_dist,hardest_negative_dist
