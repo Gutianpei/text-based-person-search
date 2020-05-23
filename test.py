@@ -16,6 +16,7 @@ import tensorflow as tf
 from keras import backend as K
 from numba import jit
 from triplet_loss import batch_hard_triplet_loss
+from transformers import BertTokenizer, TFBertModel
 
 @jit(nopython=True)
 def compute_score(mat, ids):
@@ -78,9 +79,11 @@ def triplet_loss(y_true, y_pred):
     loss = batch_hard_triplet_loss(label, y_pred[:,1], y_pred[:,0], 0.2)
     return loss
 
-word_model = KeyedVectors.load_word2vec_format('word_model.bin')
-TIME_STEP = 50
-ids, imgs, caps = get_test("caption_test.json", "../datasets/CUHK-PEDES", word_model, TIME_STEP)
+#word_model = KeyedVectors.load_word2vec_format('word_model.bin')
+TIME_STEP = 100
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+word_model = TFBertModel.from_pretrained('bert-base-uncased')
+ids, imgs, caps = get_test("caption_test.json", "../datasets/CUHK-PEDES", word_model, tokenizer, TIME_STEP)
 
 model = load_model("../best_model.h5", custom_objects={'tf': tf, 'triplet_loss': triplet_loss, 'K': K, 'InstanceNormalization':keras_contrib.layers.InstanceNormalization})
 

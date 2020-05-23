@@ -10,14 +10,16 @@ from keras.preprocessing import sequence
 from keras.applications.resnet50 import preprocess_input
 import numpy as np
 import keras
+import tensorflow as tf
 
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
-    def __init__(self, json_data, word_model, height, width, dataset_path, time_step, batch_size=32,
+    def __init__(self, json_data, word_model, tokenizer, height, width, dataset_path, time_step, batch_size=32,
                  shuffle=True):
         'Initialization'
         self.json_data = json_data
         self.word_model = word_model
+        self.tokenizer = tokenizer
         self.batch_size = batch_size
         self.height = height
         self.width = width
@@ -75,10 +77,16 @@ class DataGenerator(keras.utils.Sequence):
 
             # gen caps
             caption = data['captions']
-            tokenizer = RegexpTokenizer(r'\w+')
-            tokens = [j.lower() for j in tokenizer.tokenize(caption)]
+            #tokenizer = RegexpTokenizer(r'\w+')
+            #tokens = [j.lower() for j in tokenizer.tokenize(caption)]
             #word_model = KeyedVectors.load_word2vec_format('word_model.bin')
-            caps.append(np.array([self.word_model[i] for i in tokens]))
+            #caps.append(np.array([self.word_model[i] for i in tokens]))
+
+            # BERT Method1
+            input_ids = tf.constant(self.tokenizer.encode(caption))[None, :]
+            outputs = self.word_model(input_ids)
+            embedding = np.array(outputs[0])
+            caps.append(embedding.reshape(-1,768))
         caps = sequence.pad_sequences(caps, maxlen=self.time_step, dtype='float', padding='pre', truncating='pre', value=0.0)
         #print(caps.shape)
         return imgs, caps, ids

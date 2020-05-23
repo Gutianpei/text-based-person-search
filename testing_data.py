@@ -86,7 +86,7 @@ def data_gen():
     # with open('caption_val.json', 'w') as outfile:
     #      json.dump(val_data, outfile)
 
-def get_test(json_path, dataset_path, word_model, time_step):
+def get_test(json_path, dataset_path, word_model, tokenizer, time_step):
     ''' Read from caption_test.json
         Args:
             json_path:  .../.../caption_test.json
@@ -113,10 +113,16 @@ def get_test(json_path, dataset_path, word_model, time_step):
         imgs.append(image)
 
         caption = data['captions']
-        tokenizer = RegexpTokenizer(r'\w+')
-        tokens = [j.lower() for j in tokenizer.tokenize(caption)]
-        caps.append(np.array([word_model[i] for i in tokens]))
+        #tokenizer = RegexpTokenizer(r'\w+')
+        #tokens = [j.lower() for j in tokenizer.tokenize(caption)]
+        #caps.append(np.array([word_model[i] for i in tokens]))
         #print(len(caps))
+
+        #BERT
+        input_ids = tf.constant(tokenizer.encode(caption))[None, :]
+        outputs = word_model(input_ids)
+        embedding = np.array(outputs[0])
+        caps.append(embedding.reshape(-1,768))
     caps = sequence.pad_sequences(caps, maxlen=time_step, dtype='float', padding='pre', truncating='pre', value=0.0)
 
     return np.array(ids),np.array(imgs),np.array(caps)

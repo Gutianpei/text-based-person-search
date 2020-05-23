@@ -26,6 +26,7 @@ from keras.optimizers import Adam
 from keras import regularizers
 import argparse
 from triplet_loss import batch_hard_triplet_loss,batch_semi_triplet_loss,batch_all_triplet_loss
+from transformers import BertTokenizer, TFBertModel
 
 # load images and captions
 dpath = "../datasets/CUHK-PEDES/"
@@ -33,8 +34,8 @@ train_path = "caption_train_balanced.json"
 val_path = "caption_val.json"
 IMG_HEIGHT = 384
 IMG_WIDTH = 128
-TIME_STEP = 50
-EMBEDDING_SIZE = 50
+TIME_STEP = 100
+EMBEDDING_SIZE = 768
 batch_size = 32
 train_data = json.load(open(train_path))
 val_data = json.load(open(val_path))
@@ -47,9 +48,11 @@ params = {'batch_size': batch_size,
           'time_step': TIME_STEP
           }
 
-word_model = KeyedVectors.load_word2vec_format('word_model.bin')
-train_gen = DataGenerator(train_data, word_model,  **params)
-val_gen = DataGenerator(val_data, word_model, **params)
+#word_model = KeyedVectors.load_word2vec_format('word_model.bin')
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+word_model = TFBertModel.from_pretrained('bert-base-uncased')
+train_gen = DataGenerator(train_data, word_model, tokenizer, **params)
+val_gen = DataGenerator(val_data, word_model, tokenizer, **params)
 
 parser = argparse.ArgumentParser(description='text_img_matching')
 parser.add_argument('--model-path', type=str, required=False, default=None,
@@ -93,8 +96,8 @@ def model_gen():
     #mrg = Concatenate()([res_flat, cap_max])
     #softmax =Dense(13001, activation='softmax')(mrg)
     base_model = Model(input = [img_in,cap_in], output = stacked)
-    print(base_model.summary())
-    # plot_model(base_model, to_file='base_model.png', show_shapes = True, show_layer_names = True)
+    #print(base_model.summary())
+    #plot_model(base_model, to_file='base_model.png', show_shapes = True, show_layer_names = True)
     ########
 
     ########
