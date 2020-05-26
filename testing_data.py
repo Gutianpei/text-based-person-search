@@ -7,33 +7,33 @@ from nltk.tokenize import RegexpTokenizer
 from keras.preprocessing import sequence
 from collections import Counter
 
-def data_gen():
-    ids = {}
-    js_data = json.load(open("caption_train_balanced.json"))
-
-    for data in js_data:
-        id = data["id"]
-        #print(id)
-        if id not in ids:
-            ids[id] = [copy.deepcopy(data)]
-        else:
-            ids[id].append(copy.deepcopy(data))
-
-    balanced_train = []
-    print(len(ids))
-    for id in ids:
-        if len(ids[id]) !=4:
-            print(id)
-        # # r = min(len(ids[id]),4)
-        # # if r!=4:
-        # #     print(r)
-        #     for i in range(4):
-        #         balanced_train.append(copy.deepcopy(ids[id][i]))
-    exit()
-    print(len(balanced_train))
-
-    with open('caption_train_balanced.json', 'w') as outfile:
-          json.dump(balanced_train, outfile)
+# def data_gen():
+#     ids = {}
+#     js_data = json.load(open("caption_train_balanced.json"))
+#
+#     for data in js_data:
+#         id = data["id"]
+#         #print(id)
+#         if id not in ids:
+#             ids[id] = [copy.deepcopy(data)]
+#         else:
+#             ids[id].append(copy.deepcopy(data))
+#
+#     balanced_train = []
+#     print(len(ids))
+#     for id in ids:
+#         if len(ids[id]) !=4:
+#             print(id)
+#         # # r = min(len(ids[id]),4)
+#         # # if r!=4:
+#         # #     print(r)
+#         #     for i in range(4):
+#         #         balanced_train.append(copy.deepcopy(ids[id][i]))
+#     exit()
+#     print(len(balanced_train))
+#
+#     with open('caption_train_balanced.json', 'w') as outfile:
+#           json.dump(balanced_train, outfile)
     # def Diff(li1, li2):
     #     return (list(set(li1) - set(li2)))
     # #
@@ -119,16 +119,19 @@ def get_test(json_path, dataset_path, word_model, tokenizer, time_step):
         #print(len(caps))
 
         #BERT
-        input_ids = tf.constant(tokenizer.encode(caption))[None, :]
-        outputs = word_model(input_ids)
-        embedding = np.array(outputs[0])
-        caps.append(embedding.reshape(-1,768))
-    caps = sequence.pad_sequences(caps, maxlen=time_step, dtype='float', padding='pre', truncating='pre', value=0.0)
+        caps.append(tokenizer.encode(caption))
+
+    input_ids = sequence.pad_sequences(caps, maxlen=time_step, dtype='int', padding='post', truncating='post', value=0)
+    input_ids = tf.constant(input_ids)
+    attention_mask = np.where(input_ids != 0, 1, 0)
+    attention_mask = tf.constant(attention_mask)
+    outputs = word_model(input_ids, attention_mask=attention_mask)
+    caps = np.array(outputs[0])
 
     return np.array(ids),np.array(imgs),np.array(caps)
 
-def main():
-    data_gen()
+#def main():
+#    data_gen()
 
-if __name__ == '__main__':
-    main()
+#if __name__ == '__main__':
+#    main()

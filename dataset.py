@@ -82,11 +82,14 @@ class DataGenerator(keras.utils.Sequence):
             #word_model = KeyedVectors.load_word2vec_format('word_model.bin')
             #caps.append(np.array([self.word_model[i] for i in tokens]))
 
-            # BERT Method1
-            input_ids = tf.constant(self.tokenizer.encode(caption))[None, :]
-            outputs = self.word_model(input_ids)
-            embedding = np.array(outputs[0])
-            caps.append(embedding.reshape(-1,768))
-        caps = sequence.pad_sequences(caps, maxlen=self.time_step, dtype='float', padding='pre', truncating='pre', value=0.0)
+            # BERT Method
+            caps.append(self.tokenizer.encode(caption))
+
+        input_ids = sequence.pad_sequences(caps, maxlen=self.time_step, dtype='int', padding='post', truncating='post', value=0)
+        input_ids = tf.constant(input_ids)
+        attention_mask = np.where(input_ids != 0, 1, 0)
+        attention_mask = tf.constant(attention_mask)
+        outputs = self.word_model(input_ids, attention_mask=attention_mask)
+        caps = np.array(outputs[0])
         #print(caps.shape)
         return imgs, caps, ids
