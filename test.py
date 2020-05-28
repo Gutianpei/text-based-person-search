@@ -28,10 +28,10 @@ def compute_score(mat, ids):
 	idx = 0 # Keep track of true id
 	print()
 	print("Computing RankX")
-	for i in range(len(mat)):
-		idx_score = mat[i]
+	for ii in range(len(mat)):
+		idx_score = mat[ii]
 		res_ids = ids[idx_score]
-		print(res_ids[:20])
+		#print(res_ids[:20])
 
 		match = False
 		for i, res_id in enumerate(res_ids):
@@ -59,7 +59,7 @@ def compute_score(mat, ids):
 	print(rank20/(idx+1))
 
 def get_models(model):
-	print(model.summary())
+	#print(model.summary())
 
 	print("Image Weights: ")
 	img_input = model.layers[0].input
