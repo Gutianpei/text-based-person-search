@@ -9,29 +9,35 @@ python3 scripts/demo_inference.py --indir ../text-based-person-search/data/ --ou
 
 
 
-# TODO:
+# Google Cloud Tutorial
 
-## 1. Loading Data:
+启动服务器（开始计费）
 
-- [x] Load raw image with shape (n,img_height, img_width, 3)
-
-- [X] Load raw captions with shape (2n, step_size=99, vector_size) (2 captions for each image)
-
-- [ ] Run Alphapose get all keypoints and crop body parts
+gcloud compute instances start instance-1
 
 
-## 2. Preprocessing:
+关闭服务器（结束计费）
 
-- [ ] Standardization
-- [X] Word2Vec
-- [X] post sequence padding with 0s
+gcloud compute instances stop instance-1
+
+连接服务器
+
+gcloud compute ssh --project text-based-re-id --zone asia-east1-a instance-1
+Password: Gu122300
+
+连接jupyter
 
 
-## 3. Network:
 
-- [x] Build resnet50 and get output feature vector
-- [X] Bi-LSTM
+改权限
 
-## 4. Evaluation:
-- [ ] Rank x score
-- [ ] mAP (reference: https://github.com/YingZhangDUT/Cross-Modal-Projection-Learning/blob/master/evaluation/retrieval_eval.py)
+sudo chown -R gutianpei:gutianpei anaconda3
+
+sudo chmod -R 777 ./brucegu
+
+
+Note：
+
+务必保持directory整洁避免误操作，比如训好的model单独放一个文件夹
+
+务必给mode有意义的名字，带实验编号，实时更新training的google sheet
