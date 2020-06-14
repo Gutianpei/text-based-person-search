@@ -10,14 +10,16 @@ from keras.preprocessing import sequence
 from keras.applications.resnet50 import preprocess_input
 import numpy as np
 import keras
+import tensorflow as tf
 
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
-    def __init__(self, json_data, word_model, height, width, dataset_path, time_step, batch_size=32,
+    def __init__(self, json_data, word_model, tokenizer, height, width, dataset_path, time_step, batch_size=32,
                  shuffle=True):
         'Initialization'
         self.json_data = json_data
         self.word_model = word_model
+        self.tokenizer = tokenizer
         self.batch_size = batch_size
         self.height = height
         self.width = width
@@ -75,10 +77,19 @@ class DataGenerator(keras.utils.Sequence):
 
             # gen caps
             caption = data['captions']
-            tokenizer = RegexpTokenizer(r'\w+')
-            tokens = [j.lower() for j in tokenizer.tokenize(caption)]
+            #tokenizer = RegexpTokenizer(r'\w+')
+            #tokens = [j.lower() for j in tokenizer.tokenize(caption)]
             #word_model = KeyedVectors.load_word2vec_format('word_model.bin')
-            caps.append(np.array([self.word_model[i] for i in tokens]))
-        caps = sequence.pad_sequences(caps, maxlen=self.time_step, dtype='float', padding='pre', truncating='pre', value=0.0)
+            #caps.append(np.array([self.word_model[i] for i in tokens]))
+
+            # BERT Method
+            caps.append(self.tokenizer.encode(caption))
+
+        input_ids = sequence.pad_sequences(caps, maxlen=self.time_step, dtype='int', padding='post', truncating='post', value=0)
+        input_ids = tf.constant(input_ids)
+        attention_mask = np.where(input_ids != 0, 1, 0)
+        attention_mask = tf.constant(attention_mask)
+        outputs = self.word_model(input_ids, attention_mask=attention_mask)
+        caps = np.array(outputs[0])
         #print(caps.shape)
         return imgs, caps, ids
